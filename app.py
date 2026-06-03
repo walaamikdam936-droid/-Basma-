@@ -14,7 +14,7 @@ st.markdown(hide_style, unsafe_allow_html=True)
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
-# 3. الهيدر الرئيسي (يقرأ الصورة المحلية المعتمدة logo.jpg)
+# 3. الهيدر الرئيسي 
 st.image("logo.jpg", use_column_width=True)
 
 st.markdown("""
@@ -42,12 +42,15 @@ with tab1:
             "لغة عربية", "رياضيات", "علوم / اكتشف", "دراسات اجتماعية", "لغة إنجليزية", "تربية دينية"
         ])
     with col3:
-        # تم فصل الإعاقات كما طلبتِ تماماً
         disability = st.selectbox("🧩 نوع الإعاقة (حسب القرار الوزاري):", [
             "إعاقة ذهنية بسيطة", "بطء تعلم", "طيف التوحد (دمج خفيف)", 
             "إعاقة بصرية (ضعف بصر)", "إعاقة بصرية (كف بصر)", 
             "إعاقة سمعية (ضعف سمع)", "صعوبات تعلم أكاديمية", "إعاقة حركية (شلل دماغي بسيط)"
         ])
+
+    st.markdown("---")
+    additional_notes = st.text_area("✍️ ملاحظات المعلم الإضافية (اختياري):", 
+                                    placeholder="اكتب هنا أي تفاصيل خاصة بمستوى الطالب أو أهداف محددة تريد التركيز عليها في الخطة...")
 
     st.markdown("---")
     st.markdown("### 📸 استخراج الخطة والأنشطة (نصياً وصوتياً)")
@@ -60,7 +63,6 @@ with tab1:
         if st.button("✨ ابدأ التحليل والاستخراج", use_container_width=True):
             with st.spinner("الذكاء الاصطناعي يقوم بتحليل الدرس وإعداد الدليل التربوي والصوتي..."):
                 try:
-                    # تفعيل النظام باللغة الإنجليزية في حالة اختيار المادة لغة إنجليزية
                     if subject == "لغة إنجليزية":
                         prompt = f"""
                         You are an educational expert specializing in special education and educational inclusion.
@@ -72,7 +74,10 @@ with tab1:
                         1. The optimal teaching method for this content suited for the mentioned disability.
                         2. Three (3) practical and innovative educational activities suited for the student's abilities.
                         3. The appropriate evaluation and measurement method for their understanding.
+                        4. "Teacher Support" Tip: A short psychological and educational guidance tip for the teacher to ensure successful communication with this student.
                         """
+                        if additional_notes:
+                            prompt += f"\n\nSpecial Teacher Notes to consider: {additional_notes}"
                         audio_lang = 'en'
                     else:
                         prompt = f"""
@@ -82,28 +87,59 @@ with tab1:
                         1. طريقة التدريس المثلى لهذا المحتوى بما يتناسب مع الإعاقة المذكورة.
                         2. ثلاثة (3) أنشطة تعليمية تطبيقية ومبتكرة تناسب قدرات الطالب.
                         3. طريقة التقييم المناسبة لقياس استيعاب الطالب للدرس.
+                        4. نصيحة "دعم المعلم": توجيه نفسي وتربوي قصير للمعلم لضمان نجاح التواصل وتقديم الدعم الفعال لهذا الطالب.
                         """
+                        if additional_notes:
+                            prompt += f"\n\nملاحظات إضافية هامة من المعلم يجب مراعاتها بدقة: {additional_notes}"
                         audio_lang = 'ar'
                     
-                    # استخدام النموذج الحديث والمستقر من جوجل
                     model = genai.GenerativeModel('gemini-3.5-flash')
                     response = model.generate_content([prompt, image])
                     
                     result_text = response.text
                     
                     st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
-                    st.markdown("""<div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1;">""", unsafe_allow_html=True)
-                    st.markdown(result_text)
-                    st.markdown("</div>", unsafe_allow_html=True)
+                    st.balloons() # تأثير الاحتفال والإنجاز
                     
-                    with st.spinner("جاري تجهيز المقطع الصوتي..."):
-                        tts = gTTS(text=result_text, lang=audio_lang, slow=False)
-                        audio_bytes = io.BytesIO()
-                        tts.write_to_fp(audio_bytes)
-                        audio_bytes.seek(0)
+                    text_direction = "ltr" if audio_lang == 'en' else "rtl"
+                    text_align = "left" if audio_lang == 'en' else "right"
+                    
+                    # الميزة الجديدة: تنظيم النتائج في تبويبات داخلية
+                    res_tab1, res_tab2 = st.tabs(["📑 الخطة التربوية المفصلة", "📥 الاستماع والتحميل"])
+                    
+                    with res_tab1:
+                        st.markdown(f"""<div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1; direction: {text_direction}; text-align: {text_align}; line-height: 1.8;">""", unsafe_allow_html=True)
+                        st.markdown(result_text)
+                        st.markdown("</div>", unsafe_allow_html=True)
                         
-                        st.markdown("### 🎧 استمع إلى الخطة التربوية والأنشطة:")
-                        st.audio(audio_bytes, format='audio/mp3')
+                    with res_tab2:
+                        with st.spinner("جاري تجهيز المقطع الصوتي..."):
+                            tts = gTTS(text=result_text, lang=audio_lang, slow=False)
+                            audio_bytes = io.BytesIO()
+                            tts.write_to_fp(audio_bytes)
+                            audio_bytes.seek(0)
+                            
+                            st.markdown("### 🎧 استمع إلى الخطة والأنشطة:")
+                            st.audio(audio_bytes, format='audio/mp3')
+                            
+                            st.markdown("---")
+                            col_btn1, col_btn2 = st.columns(2)
+                            with col_btn1:
+                                st.download_button(
+                                    label="📥 تحميل الخطة كملف نصي (للنسخ والطباعة)",
+                                    data=result_text,
+                                    file_name="lesson_plan.txt",
+                                    mime="text/plain",
+                                    use_container_width=True
+                                )
+                            with col_btn2:
+                                st.download_button(
+                                    label="📥 تحميل المقطع الصوتي (MP3)",
+                                    data=audio_bytes.getvalue(),
+                                    file_name="lesson_audio.mp3",
+                                    mime="audio/mp3",
+                                    use_container_width=True
+                                )
                         
                 except Exception as e:
                     st.error("حدث خطأ أثناء المعالجة، يرجى التأكد من وضوح الصورة والمحاولة مرة أخرى.")
@@ -151,7 +187,6 @@ with tab4:
     col_img, col_dev = st.columns([1.2, 1])
     
     with col_img:
-        # استدعاء نفس الصورة المحلية (logo.jpg) في صفحة عن المنصة
         st.image("logo.jpg", 
                  caption="ذوو الهمم.. طاقة وإصرار يبني المستقبل الفردي والمجتمعي", use_column_width=True)
         
