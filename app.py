@@ -1,4 +1,3 @@
-
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
@@ -8,7 +7,6 @@ import io
 # 1. إعدادات الصفحة الأساسية
 st.set_page_config(page_title="منصة بصمة للدمج التعليمية", page_icon="🌟", layout="wide")
 
-# إخفاء العلامات المائية لمنصة Streamlit لتبدو احترافية بالكامل
 hide_style = """<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>"""
 st.markdown(hide_style, unsafe_allow_html=True)
 
@@ -16,7 +14,7 @@ st.markdown(hide_style, unsafe_allow_html=True)
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
-# 3. الهيدر الرئيسي (صورة مبهجة وكبيرة تعبر عن التحدي والإصرار والدمج)
+# 3. الهيدر الرئيسي
 st.image("https://images.unsplash.com/photo-1516627145497-ae6968895b74?q=80&w=1200&auto=format&fit=crop", use_column_width=True)
 
 st.markdown("""
@@ -26,12 +24,10 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. تقسيم المنصة إلى التبويبات الرسمية
+# 4. تقسيم المنصة 
 tab1, tab2, tab3, tab4 = st.tabs(["🚀 المساعد الذكي للدمج", "🎯 أهداف المنصة", "⚖️ قانون الدمج المصري", "👥 عن المنصة"])
 
-# ==========================================
-# الصفحة الأولى: المساعد الذكي (نص وصوت)
-# ==========================================
+# --- الصفحة الأولى: المساعد الذكي ---
 with tab1:
     st.markdown("### 📝 حددي خصائص الدرس وفئة الدمج:")
     
@@ -72,27 +68,17 @@ with tab1:
                     3. طريقة التقييم المناسبة لقياس استيعاب الطالب للدرس.
                     """
                     
-                    # النظام البرمجي المحصن للتنقل التلقائي بين النماذج لتفادي خطأ 404 تماماً
-                    try:
-                        model = genai.GenerativeModel('gemini-1.5-flash')
-                        response = model.generate_content([prompt, image])
-                    except:
-                        try:
-                            model = genai.GenerativeModel('gemini-1.5-pro')
-                            response = model.generate_content([prompt, image])
-                        except:
-                            model = genai.GenerativeModel('gemini-pro-vision')
-                            response = model.generate_content([prompt, image])
+                    # الكود الحديث والموثوق (تجاوزنا النماذج المحذوفة)
+                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    response = model.generate_content([prompt, image])
                     
                     result_text = response.text
                     
-                    # عرض النص
                     st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
                     st.markdown("""<div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1;">""", unsafe_allow_html=True)
                     st.markdown(result_text)
                     st.markdown("</div>", unsafe_allow_html=True)
                     
-                    # تحويل النص إلى صوت
                     with st.spinner("جاري تجهيز المقطع الصوتي..."):
                         tts = gTTS(text=result_text, lang='ar', slow=False)
                         audio_bytes = io.BytesIO()
@@ -103,12 +89,10 @@ with tab1:
                         st.audio(audio_bytes, format='audio/mp3')
                         
                 except Exception as e:
-                    st.error("حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.")
+                    st.error("حدث خطأ أثناء المعالجة، يرجى التأكد من وضوح الصورة والمحاولة مرة أخرى.")
                     st.info(f"تفاصيل الخطأ: {str(e)}")
 
-# ==========================================
-# الصفحة الثانية: الأهداف
-# ==========================================
+# --- الصفحة الثانية: الأهداف ---
 with tab2:
     st.markdown("""
     <div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border-right: 5px solid #3b82f6;">
@@ -122,9 +106,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-# ==========================================
-# الصفحة الثالثة: قانون الدمج
-# ==========================================
+# --- الصفحة الثالثة: قانون الدمج ---
 with tab3:
     st.markdown("""
     <div style="background-color: #fffbeb; padding: 20px; border-radius: 10px; border-right: 5px solid #f59e0b;">
@@ -138,11 +120,8 @@ with tab3:
     </div>
     """, unsafe_allow_html=True)
 
-# ==========================================
-# الصفحة الرابعة: عن المنصة (المحدثة بالكامل بناءً على طلبكِ)
-# ==========================================
+# --- الصفحة الرابعة: عن المنصة ---
 with tab4:
-    # تنسيق بطاقة العرض الخاصة بفلسفة البصمة
     st.markdown("""
     <div style="background-color: #f0fdf4; padding: 30px; border-radius: 15px; border-right: 6px solid #16a34a; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px;">
         <h2 style="color: #166534; font-family: 'Cairo', sans-serif; margin-bottom: 15px;">👤 فلسفتنا ورؤيتنا</h2>
@@ -152,11 +131,9 @@ with tab4:
     </div>
     """, unsafe_allow_html=True)
     
-    # تقسيم الجزء السفلي لعرض صورة التحدي وفريق التطوير بشكل مبهج واحترافي
     col_img, col_dev = st.columns([1.2, 1])
     
     with col_img:
-        # صورة ترمز للبصمة الملونة المبهجة والدمج والتحدي والتمكين لطلاب ذوي الهمم
         st.image("https://images.unsplash.com/photo-1573498156434-ac5030e8447d?q=80&w=600&auto=format&fit=crop", 
                  caption="ذوو الهمم.. طاقة وإصرار يبني المستقبل الفردي والمجتمعي", use_column_width=True)
         
