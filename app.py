@@ -3,6 +3,7 @@ import google.generativeai as genai
 from PIL import Image
 from gtts import gTTS
 import io
+import re
 
 # 1. إعدادات الصفحة الأساسية
 st.set_page_config(page_title="منصة بصمة للدمج التعليمية", page_icon="🌟", layout="wide")
@@ -14,7 +15,7 @@ st.markdown(hide_style, unsafe_allow_html=True)
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
-# 3. الهيدر الرئيسي 
+# 3. الهيدر الرئيسي
 st.image("logo.jpg", use_column_width=True)
 
 st.markdown("""
@@ -23,6 +24,24 @@ st.markdown("""
         <h3 style="color: #bfdbfe; font-style: italic; font-weight: normal; margin-top: 5px;">"التعليم حق للجميع.. وبدمجهم تكتمل لوحة المجتمع ونبني مستقبلاً يجمعنا"</h3>
     </div>
 """, unsafe_allow_html=True)
+
+# دالة خبيرة لتحويل النصوص إلى صيغة Word و Web/PDF منسقة
+def create_formatted_doc(text, direction, align):
+    # تحويل التنسيقات النجمية إلى تنسيقات HTML ليقرأها الوورد
+    html_text = text.replace('\n', '<br>')
+    html_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', html_text)
+    
+    doc_content = f"""
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset='utf-8'></head>
+    <body dir='{direction}' style='font-family: "Arial", sans-serif; text-align: {align}; line-height: 1.8; font-size: 16px;'>
+        <h2 style='color: #1e3a8a; text-align: center;'>🌟 الدليل التربوي المخصص - منصة بصمة 🌟</h2>
+        <hr>
+        <div>{html_text}</div>
+    </body>
+    </html>
+    """
+    return doc_content.encode('utf-8')
 
 # 4. تقسيم المنصة 
 tab1, tab2, tab3, tab4 = st.tabs(["🚀 المساعد الذكي للدمج", "🎯 أهداف المنصة", "⚖️ قانون الدمج المصري", "👥 عن المنصة"])
@@ -50,7 +69,7 @@ with tab1:
 
     st.markdown("---")
     additional_notes = st.text_area("✍️ ملاحظات المعلم الإضافية (اختياري):", 
-                                    placeholder="اكتب هنا أي تفاصيل خاصة بمستوى الطالب أو أهداف محددة تريد التركيز عليها في الخطة...")
+                                    placeholder="اكتب هنا أي تفاصيل خاصة بمستوى الطالب، أو صعوبات يواجهها، ليقوم الذكاء الاصطناعي ببناء الخطة بناءً عليها...")
 
     st.markdown("---")
     st.markdown("### 📸 استخراج الخطة والأنشطة (نصياً وصوتياً)")
@@ -66,31 +85,36 @@ with tab1:
                     if subject == "لغة إنجليزية":
                         prompt = f"""
                         You are an educational expert specializing in special education and educational inclusion.
-                        Based on educational inclusion standards, analyze the attached lesson image and provide a comprehensive, professional lesson plan for a teacher teaching a student in ({stage}) for the subject (English) who has ({disability}).
+                        Analyze the attached lesson image and provide a comprehensive lesson plan for a teacher teaching a student in ({stage}) for the subject (English) who has ({disability}).
                         
-                        CRITICAL REQUIRED RULE: The entire response must be written in fluent, professional English because the subject is English. Do not write any Arabic words.
-                        
-                        Provide the response in clear points containing:
-                        1. The optimal teaching method for this content suited for the mentioned disability.
-                        2. Three (3) practical and innovative educational activities suited for the student's abilities.
-                        3. The appropriate evaluation and measurement method for their understanding.
-                        4. "Teacher Support" Tip: A short psychological and educational guidance tip for the teacher to ensure successful communication with this student.
+                        CRITICAL REQUIRED RULE: The entire response must be written in fluent English. Do not write Arabic words.
                         """
                         if additional_notes:
-                            prompt += f"\n\nSpecial Teacher Notes to consider: {additional_notes}"
+                            prompt += f"\nCRITICAL: The teacher provided these specific notes: '{additional_notes}'. You MUST explicitly integrate these notes into the teaching method and activities. Create a specific section titled 'Addressing Teacher Notes' to show how you used them."
+                        
+                        prompt += """
+                        Provide the response in clear points:
+                        1. The optimal teaching method.
+                        2. Three (3) practical educational activities suited for the student.
+                        3. Evaluation method.
+                        4. "Teacher Support" Tip (Psychological guidance).
+                        """
                         audio_lang = 'en'
                     else:
                         prompt = f"""
                         أنت خبير تربوي مصري متخصص في التربية الخاصة والدمج التعليمي. 
-                        استناداً إلى قانون الدمج المصري، قم بتحليل الدرس في الصورة المرفقة، وقدم دليلاً مبسطاً وموجهاً لمعلم يدرس طالب في ({stage}) لمادة ({subject}) يعاني من ({disability}).
-                        قدم الإجابة باللغة العربية الفصحى الواضحة في نقاط مباشرة تحتوي على:
-                        1. طريقة التدريس المثلى لهذا المحتوى بما يتناسب مع الإعاقة المذكورة.
-                        2. ثلاثة (3) أنشطة تعليمية تطبيقية ومبتكرة تناسب قدرات الطالب.
-                        3. طريقة التقييم المناسبة لقياس استيعاب الطالب للدرس.
-                        4. نصيحة "دعم المعلم": توجيه نفسي وتربوي قصير للمعلم لضمان نجاح التواصل وتقديم الدعم الفعال لهذا الطالب.
+                        قم بتحليل الدرس المرفق، وقدم دليلاً لمعلم يدرس طالب في ({stage}) لمادة ({subject}) يعاني من ({disability}).
                         """
                         if additional_notes:
-                            prompt += f"\n\nملاحظات إضافية هامة من المعلم يجب مراعاتها بدقة: {additional_notes}"
+                            prompt += f"\nهام جداً: لقد كتب المعلم هذه الملاحظات الخاصة بالطالب: '{additional_notes}'. يجب عليك إلزامياً بناء الأنشطة وطريقة التدريس لتتلاءم مع هذه الملاحظات، مع إضافة قسم في إجابتك بعنوان 'تلبية ملاحظات المعلم' توضح فيه كيف وظفت ملاحظاته في خطتك."
+                            
+                        prompt += """
+                        قدم الإجابة باللغة العربية الفصحى في نقاط مباشرة:
+                        1. طريقة التدريس المثلى لهذا المحتوى.
+                        2. ثلاثة (3) أنشطة تعليمية تطبيقية ومبتكرة.
+                        3. طريقة التقييم المناسبة.
+                        4. نصيحة "دعم المعلم": توجيه نفسي وتربوي قصير للمعلم.
+                        """
                         audio_lang = 'ar'
                     
                     model = genai.GenerativeModel('gemini-3.5-flash')
@@ -99,13 +123,12 @@ with tab1:
                     result_text = response.text
                     
                     st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
-                    st.balloons() # تأثير الاحتفال والإنجاز
+                    st.balloons()
                     
-                    text_direction = "ltr" if audio_lang == 'en' else "rtl"
-                    text_align = "left" if audio_lang == 'en' else "right"
+                    text_direction = "rtl" if audio_lang == 'ar' else "ltr"
+                    text_align = "right" if audio_lang == 'ar' else "left"
                     
-                    # الميزة الجديدة: تنظيم النتائج في تبويبات داخلية
-                    res_tab1, res_tab2 = st.tabs(["📑 الخطة التربوية المفصلة", "📥 الاستماع والتحميل"])
+                    res_tab1, res_tab2 = st.tabs(["📑 الخطة التربوية المفصلة", "📥 الاستماع والتحميل المنسق"])
                     
                     with res_tab1:
                         st.markdown(f"""<div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1; direction: {text_direction}; text-align: {text_align}; line-height: 1.8;">""", unsafe_allow_html=True)
@@ -123,18 +146,35 @@ with tab1:
                             st.audio(audio_bytes, format='audio/mp3')
                             
                             st.markdown("---")
-                            col_btn1, col_btn2 = st.columns(2)
+                            st.markdown("### 💾 خيارات الحفظ (Word & PDF)")
+                            
+                            col_btn1, col_btn2, col_btn3 = st.columns(3)
+                            
+                            # 1. تحميل كملف Word منسق
+                            formatted_doc = create_formatted_doc(result_text, text_direction, text_align)
                             with col_btn1:
                                 st.download_button(
-                                    label="📥 تحميل الخطة كملف نصي (للنسخ والطباعة)",
-                                    data=result_text,
-                                    file_name="lesson_plan.txt",
-                                    mime="text/plain",
+                                    label="📄 تحميل كملف Word (للتعديل والطباعة)",
+                                    data=formatted_doc,
+                                    file_name="lesson_plan.doc",
+                                    mime="application/msword",
                                     use_container_width=True
                                 )
+                                
+                            # 2. تحميل كصفحة ويب (للحفظ كـ PDF)
                             with col_btn2:
                                 st.download_button(
-                                    label="📥 تحميل المقطع الصوتي (MP3)",
+                                    label="📑 تحميل كصفحة ويب (احفظها كـ PDF)",
+                                    data=formatted_doc,
+                                    file_name="lesson_plan.html",
+                                    mime="text/html",
+                                    use_container_width=True
+                                )
+                                
+                            # 3. تحميل الصوت
+                            with col_btn3:
+                                st.download_button(
+                                    label="🎵 تحميل المقطع الصوتي (MP3)",
                                     data=audio_bytes.getvalue(),
                                     file_name="lesson_audio.mp3",
                                     mime="audio/mp3",
@@ -145,7 +185,7 @@ with tab1:
                     st.error("حدث خطأ أثناء المعالجة، يرجى التأكد من وضوح الصورة والمحاولة مرة أخرى.")
                     st.info(f"تفاصيل الخطأ: {str(e)}")
 
-# --- الصفحة الثانية: الأهداف ---
+# --- باقي الصفحات (الأهداف، القانون، عن المنصة) ---
 with tab2:
     st.markdown("""
     <div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border-right: 5px solid #3b82f6;">
@@ -159,21 +199,18 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-# --- الصفحة الثالثة: قانون الدمج ---
 with tab3:
     st.markdown("""
     <div style="background-color: #fffbeb; padding: 20px; border-radius: 10px; border-right: 5px solid #f59e0b;">
         <h3 style="color: #b45309;">⚖️ ملخص قانون الدمج المصري (القرار الوزاري 252 لسنة 2017)</h3>
         <ul style="font-size: 18px; line-height: 1.8;">
             <li><b>نظام الدمج:</b> يهدف إلى توفير فرص تعليمية متكافئة للطلاب ذوي الإعاقة البسيطة بمدارس التعليم العام.</li>
-            <li><b>الفئات المسموح لها بالدمج:</b> الإعاقة البصرية (المكفوفين وضعاف البصر)، الإعاقة الحركية، الإعاقة السمعية (ضعاف السمع)، الإعاقة الذهنية البسيطة، بطء التعلم، التوحد، ومتلازمة داون.</li>
-            <li><b>التقييم والامتحانات:</b> يتم تعديل نظم الامتحانات لتناسب كل إعاقة (مثل توفير مرافق قانوني، أو امتحانات موضوعية لبعض الفئات بنسب معينة).</li>
-            <li><b>دور المعلم:</b> إعداد خطة تربوية فردية (IEP) تتناسب مع قدرات الطالب، واستخدام وسائل إيضاح حسية وملموسة.</li>
+            <li><b>الفئات المسموح لها بالدمج:</b> الإعاقة البصرية، الإعاقة الحركية، الإعاقة السمعية، الإعاقة الذهنية البسيطة، بطء التعلم، التوحد.</li>
+            <li><b>دور المعلم:</b> إعداد خطة تربوية فردية تتناسب مع قدرات الطالب.</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
 
-# --- الصفحة الرابعة: عن المنصة ---
 with tab4:
     st.markdown("""
     <div style="background-color: #f0fdf4; padding: 30px; border-radius: 15px; border-right: 6px solid #16a34a; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px;">
@@ -187,8 +224,7 @@ with tab4:
     col_img, col_dev = st.columns([1.2, 1])
     
     with col_img:
-        st.image("logo.jpg", 
-                 caption="ذوو الهمم.. طاقة وإصرار يبني المستقبل الفردي والمجتمعي", use_column_width=True)
+        st.image("logo.jpg", caption="ذوو الهمم.. طاقة وإصرار يبني المستقبل الفردي والمجتمعي", use_column_width=True)
         
     with col_dev:
         st.markdown("""
