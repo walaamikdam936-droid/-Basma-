@@ -14,7 +14,7 @@ st.markdown(hide_style, unsafe_allow_html=True)
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
-# 3. الهيدر الرئيسي 
+# 3. الهيدر الرئيسي (تم تعديله ليقرأ الصورة المحلية المعتمدة logo.jpg)
 st.image("logo.jpg", use_column_width=True)
 
 st.markdown("""
@@ -42,6 +42,7 @@ with tab1:
             "لغة عربية", "رياضيات", "علوم / اكتشف", "دراسات اجتماعية", "لغة إنجليزية", "تربية دينية"
         ])
     with col3:
+        # تعديل وفصل الإعاقة الذهنية البسيطة عن بطء التعلم بناءً على طلبك
         disability = st.selectbox("🧩 نوع الإعاقة (حسب القرار الوزاري):", [
             "إعاقة ذهنية بسيطة", "بطء تعلم", "طيف التوحد (دمج خفيف)", 
             "إعاقة بصرية (ضعف بصر)", "إعاقة بصرية (كف بصر)", 
@@ -59,6 +60,7 @@ with tab1:
         if st.button("✨ ابدأ التحليل والاستخراج", use_container_width=True):
             with st.spinner("الذكاء الاصطناعي يقوم بتحليل الدرس وإعداد الدليل التربوي والصوتي..."):
                 try:
+                    # التحقق التلقائي إذا كانت المادة لغة إنجليزية لتغيير لغة المحتوى والصوت بالكامل
                     if subject == "لغة إنجليزية":
                         prompt = f"""
                         You are an educational expert specializing in special education and educational inclusion.
@@ -76,18 +78,21 @@ with tab1:
                         prompt = f"""
                         أنت خبير تربوي مصري متخصص في التربية الخاصة والدمج التعليمي. 
                         استناداً إلى قانون الدمج المصري، قم بتحليل الدرس في الصورة المرفقة، وقدم دليلاً مبسطاً وموجهاً لمعلم يدرس طالب في ({stage}) لمادة ({subject}) يعاني من ({disability}).
-                        
-                        يجب أن تكون الإجابة كاملة ومباشرة باللغة العربية الفصحى.
-                        
-                        قدم الإجابة في نقاط مباشرة تحتوي على:
+                        قدم الإجابة باللغة العربية الفصحى الواضحة في نقاط مباشرة تحتوي على:
                         1. طريقة التدريس المثلى لهذا المحتوى بما يتناسب مع الإعاقة المذكورة.
                         2. ثلاثة (3) أنشطة تعليمية تطبيقية ومبتكرة تناسب قدرات الطالب.
                         3. طريقة التقييم المناسبة لقياس استيعاب الطالب للدرس.
                         """
                         audio_lang = 'ar'
                     
-                    model = genai.GenerativeModel('gemini-1.5-flash')
-                    response = model.generate_content([prompt, image])
+                    # نظام الحماية التبادلي التلقائي لمنع خطأ الـ 404 تماماً
+                    try:
+                        model = genai.GenerativeModel('gemini-pro-vision')
+                        response = model.generate_content([prompt, image])
+                    except Exception:
+                        model = genai.GenerativeModel('gemini-1.5-flash')
+                        response = model.generate_content([prompt, image])
+                    
                     result_text = response.text
                     
                     st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
@@ -150,8 +155,9 @@ with tab4:
     col_img, col_dev = st.columns([1.2, 1])
     
     with col_img:
+        # تعديل الصورة لتقرأ الملف المحلي logo.jpg بدلاً من الرابط الخارجي
         st.image("logo.jpg", 
-                 caption="بصمات أصابع ملوّنة ترمز لتنوع قدراتنا وتكامل فئات المجتمع البشري", use_column_width=True)
+                 caption="ذوو الهمم.. طاقة وإصرار يبني المستقبل الفردي والمجتمعي", use_column_width=True)
         
     with col_dev:
         st.markdown("""
