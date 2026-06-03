@@ -15,6 +15,14 @@ st.markdown(hide_style, unsafe_allow_html=True)
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
+# تجهيز ذاكرة المنصة (Session State) لحفظ النتائج ومنع اختفائها
+if 'analysis_done' not in st.session_state:
+    st.session_state.analysis_done = False
+    st.session_state.result_text = ""
+    st.session_state.audio_bytes = None
+    st.session_state.formatted_doc = None
+    st.session_state.audio_lang = 'ar'
+
 # 3. الهيدر الرئيسي
 st.image("logo.jpg", use_column_width=True)
 
@@ -42,7 +50,7 @@ def create_formatted_doc(text, direction, align):
     return doc_content.encode('utf-8')
 
 # 4. تقسيم المنصة (5 تبويبات تفصيلية)
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 المساعد الذكي", "🎯 أهداف المنصة وفلسفتها", "⚖️ قانون الدمج بالتفصيل", "👥 عن المنصة", "📚 مكتبة الإعاقات والمقالات"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 المساعد الذكي", "🎯 أهداف المنصة وفلسفتها", "⚖️ قانون الدمج", "👥 عن المنصة", "📚 مكتبة الإعاقات والمقالات"])
 
 # ==========================================
 # --- الصفحة الأولى: المساعد الذكي ---
@@ -86,31 +94,42 @@ with tab1:
                     
                     model = genai.GenerativeModel('gemini-3.5-flash')
                     response = model.generate_content([prompt, image])
-                    result_text = response.text
                     
-                    st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
-                    st.balloons()
+                    # حفظ النتائج في ذاكرة الجلسة
+                    st.session_state.result_text = response.text
+                    st.session_state.audio_lang = audio_lang
                     
                     text_dir = "rtl" if audio_lang == 'ar' else "ltr"
                     text_align = "right" if audio_lang == 'ar' else "left"
                     
-                    res_tab1, res_tab2 = st.tabs(["📑 الخطة المفصلة", "📥 الاستماع والتحميل"])
-                    with res_tab1:
-                        st.markdown(f"""<div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1; direction: {text_dir}; text-align: {text_align}; line-height: 1.8;">""" + result_text + "</div>", unsafe_allow_html=True)
-                    with res_tab2:
-                        tts = gTTS(text=result_text, lang=audio_lang, slow=False)
-                        audio_bytes = io.BytesIO()
-                        tts.write_to_fp(audio_bytes)
-                        audio_bytes.seek(0)
-                        st.audio(audio_bytes, format='audio/mp3')
-                        
-                        col_btn1, col_btn2, col_btn3 = st.columns(3)
-                        formatted_doc = create_formatted_doc(result_text, text_dir, text_align)
-                        col_btn1.download_button("📄 تحميل Word منسق", data=formatted_doc, file_name="lesson_plan.doc", mime="application/msword", use_container_width=True)
-                        col_btn2.download_button("📑 تحميل كـ PDF (عبر المتصفح)", data=formatted_doc, file_name="lesson_plan.html", mime="text/html", use_container_width=True)
-                        col_btn3.download_button("🎵 تحميل الملف الصوتي MP3", data=audio_bytes.getvalue(), file_name="lesson_audio.mp3", mime="audio/mp3", use_container_width=True)
+                    st.session_state.formatted_doc = create_formatted_doc(st.session_state.result_text, text_dir, text_align)
+                    
+                    tts = gTTS(text=st.session_state.result_text, lang=audio_lang, slow=False)
+                    audio_io = io.BytesIO()
+                    tts.write_to_fp(audio_io)
+                    st.session_state.audio_bytes = audio_io.getvalue()
+                    
+                    st.session_state.analysis_done = True
+                    st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
+                    
                 except Exception as e:
                     st.error("حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.")
+
+    # عرض النتائج من الذاكرة (لكي لا تختفي عند ضغط التحميل)
+    if st.session_state.analysis_done:
+        text_dir = "rtl" if st.session_state.audio_lang == 'ar' else "ltr"
+        text_align = "right" if st.session_state.audio_lang == 'ar' else "left"
+        
+        res_tab1, res_tab2 = st.tabs(["📑 الخطة المفصلة", "📥 الاستماع والتحميل"])
+        with res_tab1:
+            st.markdown(f"""<div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1; direction: {text_dir}; text-align: {text_align}; line-height: 1.8;">""" + st.session_state.result_text + "</div>", unsafe_allow_html=True)
+        with res_tab2:
+            st.audio(st.session_state.audio_bytes, format='audio/mp3')
+            
+            col_btn1, col_btn2, col_btn3 = st.columns(3)
+            col_btn1.download_button("📄 تحميل Word منسق", data=st.session_state.formatted_doc, file_name="lesson_plan.doc", mime="application/msword", use_container_width=True)
+            col_btn2.download_button("📑 تحميل كـ PDF (عبر المتصفح)", data=st.session_state.formatted_doc, file_name="lesson_plan.html", mime="text/html", use_container_width=True)
+            col_btn3.download_button("🎵 تحميل الملف الصوتي MP3", data=st.session_state.audio_bytes, file_name="lesson_audio.mp3", mime="audio/mp3", use_container_width=True)
 
 # ==========================================
 # --- الصفحة الثانية: أهداف المنصة وفلسفتها ---
@@ -139,40 +158,17 @@ with tab2:
     """, unsafe_allow_html=True)
 
 # ==========================================
-# --- الصفحة الثالثة: قانون الدمج بالتفصيل ---
+# --- الصفحة الثالثة: قانون الدمج ---
 # ==========================================
 with tab3:
     st.markdown("""
     <div style="background-color: #fffbeb; padding: 30px; border-radius: 10px; border-right: 6px solid #f59e0b;">
         <h2 style="color: #b45309; margin-bottom: 20px;">⚖️ قراءة مفصلة في قانون الدمج المصري (القرار الوزاري 252 لسنة 2017)</h2>
-        <p style="font-size: 19px; line-height: 2; text-align: justify; color: #451a03;">
-            يعتبر القرار الوزاري رقم 252 لسنة 2017 هو الدستور الحاكم والمنظم لعملية دمج الطلاب ذوي الإعاقة البسيطة بمدارس التعليم العام والفني. لم يأتِ هذا القرار كإجراء إداري فحسب، بل كخطوة وطنية وتربوية تهدف إلى تحقيق تكافؤ الفرص والقضاء على التمييز. وفيما يلي تفصيل شامل لأهم بنوده:
+        <p style="font-size: 20px; line-height: 2; text-align: justify; color: #451a03; margin-bottom: 20px;">
+            يُعد القرار الوزاري المصري رقم 252 لسنة 2017 بمثابة المظلة القانونية والتربوية التي تضمن حقوق الطلاب ذوي الإعاقة البسيطة في تلقي تعليم متكافئ داخل مدارس التعليم العام والفني. يهدف هذا القرار إلى إنهاء العزلة التعليمية لهذه الفئات، حيث يسمح بدمج الطلاب الذين يعانون من إعاقات بصرية أو سمعية أو حركية، بالإضافة إلى ذوي الإعاقة الذهنية البسيطة، وبطء التعلم، واضطراب طيف التوحد (الدمج الخفيف)، ومتلازمة داون. وقد راعى القانون الفروق الفردية العميقة من خلال إقرار استثناءات تنظيمية هامة، مثل التجاوز عن شرط السن عند القبول بالمدارس بزيادة تصل إلى عامين عن الطلاب العاديين، وذلك لضمان حصول كل طالب على فرصته العادلة والكاملة في التعليم ضمن بيئة مدرسية طبيعية تدعم تقبل الاختلاف وتساند جهود الأسرة.
         </p>
-        
-        <h3 style="color: #92400e; margin-top: 25px;">📌 أولاً: الفئات المستهدفة والمسموح بدمجها</h3>
-        <p style="font-size: 18px; line-height: 1.9; color: #451a03;">حدد القانون الفئات التي يحق لها الالتحاق بمدارس التعليم العام بشكل طبيعي بعد اجتياز التقييمات الطبية والنفسية، وتشمل:</p>
-        <ul style="font-size: 18px; line-height: 1.9; color: #451a03;">
-            <li><b>الإعاقة البصرية:</b> وتتضمن المكفوفين كلياً، وضعاف البصر.</li>
-            <li><b>الإعاقة الحركية:</b> بجميع أشكالها (كالشلل الدماغي البسيط) طالما لا تعيق القدرة على الاستيعاب الأكاديمي.</li>
-            <li><b>الإعاقة السمعية:</b> وتحديداً ضعاف السمع ومستخدمي المعينات السمعية أو زارعي القوقعة.</li>
-            <li><b>الإعاقة الذهنية البسيطة وبطء التعلم:</b> للطلاب الذين تتراوح نسبة ذكائهم (IQ) بين 65 إلى 84 درجة على مقاييس الذكاء المعتمدة.</li>
-            <li><b>اضطراب طيف التوحد (دمج خفيف):</b> للطلاب القادرين على التواصل وتلبية الاحتياجات الأساسية.</li>
-            <li><b>متلازمة داون:</b> للحالات القابلة للتعلم الأكاديمي والدمج الاجتماعي.</li>
-        </ul>
-
-        <h3 style="color: #92400e; margin-top: 25px;">📌 ثانياً: شروط القبول والسن</h3>
-        <p style="font-size: 18px; line-height: 1.9; color: #451a03;">
-            أقر القانون استثناءات هامة لطلاب الدمج تقديراً لظروفهم، حيث يحق التجاوز عن شرط السن في القبول بالمدارس (بزيادة تصل إلى عامين) عن أقرانهم من الطلاب العاديين في نفس المرحلة، لضمان حصولهم على فرصتهم الكاملة في التعليم دون تعنت إداري.
-        </p>
-
-        <h3 style="color: #92400e; margin-top: 25px;">📌 ثالثاً: نظام الامتحانات والتقييم العادل</h3>
-        <p style="font-size: 18px; line-height: 1.9; color: #451a03;">
-            من أهم ركائز القرار 252 هو تعديل شكل التقييم ليكون منصفاً. فقد ألزم القانون المدارس بتوفير امتحانات بمواصفات خاصة تعتمد بشكل أساسي على الأسئلة الموضوعية (اختيار من متعدد، صح وخطأ، توصيل) والتقليل من الأسئلة المقالية المعقدة. وتختلف نسب هذه الأسئلة باختلاف نوع الإعاقة. كما كفل القانون حق الطالب في الاستعانة بـ <b>"مرافق قانوني أو تربوي"</b> لكتابة الإجابات نيابة عنه (في حالات الإعاقة البصرية الحادة أو الحركية أو الذهنية) وفق شروط وضوابط تضمن النزاهة.
-        </p>
-
-        <h3 style="color: #92400e; margin-top: 25px;">📌 رابعاً: دور المعلم والخطة التربوية الفردية (IEP)</h3>
-        <p style="font-size: 18px; line-height: 1.9; color: #451a03;">
-            ألزم القانون المدرسة ومعلم الفصل بتصميم وتطبيق "خطة تربوية فردية" لكل طالب مدمج، بحيث يتم تكييف المنهج (دون حذف أجزاء أساسية منه) ليتناسب مع مدارك الطالب. وهنا يأتي دور <b>"منصة بصمة"</b> التي تحول هذا الإلزام القانوني العسير إلى تطبيق عملي سهل، حيث توفر للمعلم الخطة المطلوبة بضغطة زر واحدة امتثالاً لروح ونصوص القانون.
+        <p style="font-size: 20px; line-height: 2; text-align: justify; color: #451a03;">
+            ولضمان نجاح عملية الدمج الأكاديمي على أرض الواقع، أرسى القانون نظاماً منصفاً للتقييم والامتحانات؛ حيث ألزم المدارس بتصميم أوراق امتحانية ذات مواصفات خاصة تعتمد في أغلبها على الأسئلة الموضوعية وتبتعد عن الأسئلة المقالية المعقدة بما يتناسب مع نوع الإعاقة ونسبتها، مع كفالة حق الطالب في الاستعانة بمرافق قانوني أو تربوي لكتابة الإجابات إذا استدعت حالته ذلك. كما وضع القانون مسؤولية كبرى على عاتق معلم الفصل تتمثل في إعداد وتطبيق "خطة تربوية فردية" لكل طالب مدمج، بحيث يتم تكييف استراتيجيات شرح المنهج وطرق التقييم لتتلاءم مع قدراته الفعلية. ومن هنا تنطلق الأهمية القصوى لـ "منصة بصمة"، التي تحول هذا الإلزام القانوني إلى تطبيق عملي سهل، وتساند المعلم في استخراج الخطة الفردية المطلوبة بضغطة زر وبطريقة تربوية علمية لتنفيذ الدمج الفعلي داخل الغرفة الصفية.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -304,4 +300,4 @@ with tab5:
         elif selected_disability_tool == "طيف التوحد":
             st.info("💡 **الوسائل المقترحة:**\n1. جداول بصرية يومية ثابتة لتنظيم المهام (Visual Schedules).\n2. قصص اجتماعية مصورة لتعليم الاستجابات والسلوكيات.\n3. أدوات الاسترخاء والتركيز الحسي (المطاط، الكرات الإسفنجية).\n4. كبائن أو زوايا هادئة خالية من المشتتات البصرية.")
         elif selected_disability_tool == "إعاقة حركية":
-            st.info("💡 **الوسائل المقترحة:**\n1. حوامل كتب وأوراق قابلة للتعديل.\n2. أقلام سميكة بمقابض مطاطية لسهولة الإمساك.\n3. كيبورد معدل أو شاشات لمس حساسة.\n4. طاولات دراسية قابلة للتحكم في الارتفاع لاستيعاب الكرسي المتحرك.")
+            st.info("💡 **الوسائل المقترحة:**\n1. حوامل كتب وأوراق قابلة للتعديل.\n2. أقلام سميكة بمقابض مطاطية لسهولة الإمساك.\n3. كيبورد معدل أو شاشات لمس حساسة.\n4. طاولات دراسية قابلة للتحكم في الارتفاع لاستيعاب الكرسي المتحرك.") 
