@@ -7,7 +7,6 @@ import io
 # 1. إعدادات الصفحة الأساسية
 st.set_page_config(page_title="منصة بصمة للدمج التعليمية", page_icon="🌟", layout="wide")
 
-# إخفاء العلامات المائية لمنصة Streamlit لتبدو احترافية بالكامل
 hide_style = """<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>"""
 st.markdown(hide_style, unsafe_allow_html=True)
 
@@ -15,8 +14,8 @@ st.markdown(hide_style, unsafe_allow_html=True)
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
-# 3. الهيدر الرئيسي (صورة البصمات الملونة ودمج الطلاب)
-st.image("https://images.unsplash.com/photo-1560421883-e2a998fe0301?q=80&w=1200&auto=format&fit=crop", use_column_width=True)
+# 3. الهيدر الرئيسي (يقرأ الصورة الجديدة مباشرة)
+st.image("logo.jpg", use_column_width=True)
 
 st.markdown("""
     <div style="text-align: center; background-color: #1e3a8a; padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
@@ -25,12 +24,10 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# 4. تقسيم المنصة إلى التبويبات الرسمية
+# 4. تقسيم المنصة 
 tab1, tab2, tab3, tab4 = st.tabs(["🚀 المساعد الذكي للدمج", "🎯 أهداف المنصة", "⚖️ قانون الدمج المصري", "👥 عن المنصة"])
 
-# ==========================================
-# الصفحة الأولى: المساعد الذكي (نص وصوت ذكي متطور)
-# ==========================================
+# --- الصفحة الأولى: المساعد الذكي ---
 with tab1:
     st.markdown("### 📝 حددي خصائص الدرس وفئة الدمج:")
     
@@ -62,9 +59,7 @@ with tab1:
         if st.button("✨ ابدأ التحليل والاستخراج", use_container_width=True):
             with st.spinner("الذكاء الاصطناعي يقوم بتحليل الدرس وإعداد الدليل التربوي والصوتي..."):
                 try:
-                    # --- الذكاء اللغوي الديناميكي للأوامر والصوت ---
                     if subject == "لغة إنجليزية":
-                        # برومبت صارم بالإنجليزية لإنتاج نص إنجليزي خالص لتطبيق النطق السليم
                         prompt = f"""
                         You are an educational expert specializing in special education and educational inclusion.
                         Based on educational inclusion standards, analyze the attached lesson image and provide a comprehensive, professional lesson plan for a teacher teaching a student in ({stage}) for the subject (English) who has ({disability}).
@@ -78,7 +73,6 @@ with tab1:
                         """
                         audio_lang = 'en'
                     else:
-                        # برومبت باللغة العربية لباقي المواد الدراسية
                         prompt = f"""
                         أنت خبير تربوي مصري متخصص في التربية الخاصة والدمج التعليمي. 
                         استناداً إلى قانون الدمج المصري، قم بتحليل الدرس في الصورة المرفقة، وقدم دليلاً مبسطاً وموجهاً لمعلم يدرس طالب في ({stage}) لمادة ({subject}) يعاني من ({disability}).
@@ -92,7 +86,6 @@ with tab1:
                         """
                         audio_lang = 'ar'
                     
-                    # استدعاء النموذج الحديث والمعتمد
                     model = genai.GenerativeModel('gemini-3.5-flash')
                     response = model.generate_content([prompt, image])
                     result_text = response.text
@@ -102,7 +95,6 @@ with tab1:
                     st.markdown(result_text)
                     st.markdown("</div>", unsafe_allow_html=True)
                     
-                    # توليد الصوت باللغة المطابقة تماماً للنص المستخرج
                     with st.spinner("جاري تجهيز المقطع الصوتي..."):
                         tts = gTTS(text=result_text, lang=audio_lang, slow=False)
                         audio_bytes = io.BytesIO()
@@ -116,9 +108,7 @@ with tab1:
                     st.error("حدث خطأ أثناء المعالجة، يرجى التأكد من وضوح الصورة والمحاولة مرة أخرى.")
                     st.info(f"تفاصيل الخطأ: {str(e)}")
 
-# ==========================================
-# الصفحة الثانية: الأهداف
-# ==========================================
+# --- الصفحة الثانية: الأهداف ---
 with tab2:
     st.markdown("""
     <div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border-right: 5px solid #3b82f6;">
@@ -132,9 +122,7 @@ with tab2:
     </div>
     """, unsafe_allow_html=True)
 
-# ==========================================
-# الصفحة الثالثة: قانون الدمج
-# ==========================================
+# --- الصفحة الثالثة: قانون الدمج ---
 with tab3:
     st.markdown("""
     <div style="background-color: #fffbeb; padding: 20px; border-radius: 10px; border-right: 5px solid #f59e0b;">
@@ -148,9 +136,7 @@ with tab3:
     </div>
     """, unsafe_allow_html=True)
 
-# ==========================================
-# الصفحة الرابعة: عن المنصة
-# ==========================================
+# --- الصفحة الرابعة: عن المنصة ---
 with tab4:
     st.markdown("""
     <div style="background-color: #f0fdf4; padding: 30px; border-radius: 15px; border-right: 6px solid #16a34a; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px;">
@@ -164,7 +150,7 @@ with tab4:
     col_img, col_dev = st.columns([1.2, 1])
     
     with col_img:
-        st.image("https://images.unsplash.com/photo-1560421883-e2a998fe0301?q=80&w=600&auto=format&fit=crop", 
+        st.image("logo.jpg", 
                  caption="بصمات أصابع ملوّنة ترمز لتنوع قدراتنا وتكامل فئات المجتمع البشري", use_column_width=True)
         
     with col_dev:
