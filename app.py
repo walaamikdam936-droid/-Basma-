@@ -64,7 +64,7 @@ with tab1:
             with st.spinner("الذكاء الاصطناعي يقوم بتحليل الدرس وإعداد الدليل التربوي والصوتي..."):
                 try:
                     # إعداد نموذج جوجل
-                    model = genai.GenerativeModel('gemini-1.5-flash-')
+                    model = genai.GenerativeModel('gemini-1.5-flash')
                     
                     # الأمر الموجه (Prompt)
                     prompt = f"""
