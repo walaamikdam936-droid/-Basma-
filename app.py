@@ -137,3 +137,13 @@ with tab1:
                         
                 except Exception as e:
                     st.error(f"حدث خطأ أثناء المعالجة: {e}")
+
+# --- حقوق الملكية ---
+st.markdown("---")
+st.markdown("""
+    <div style='text-align: center; color: gray; padding: 10px;'>
+        <b>تم تصميم وتطوير التطبيق بواسطة أ. ولاء مقدام</b><br>
+        منسق وحدة التواصل ودعم المعلمين<br>
+        مدرسة أحمد ضيف الله للتعليم الأساسي
+    </div>
+""", unsafe_allow_html=True)
