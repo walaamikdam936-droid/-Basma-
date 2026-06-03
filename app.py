@@ -1,149 +1,67 @@
-
 import streamlit as st
 import google.generativeai as genai
-from gtts import gTTS
-import os
 from PIL import Image
-import tempfile
+import io
 
-# قراءة المفتاح بأمان من إعدادات السحابة (Streamlit Secrets)
-GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
-genai.configure(api_key=GOOGLE_API_KEY)
+# إعدادات الصفحة البرمجية المتقدمة
+st.set_page_config(
+    page_title="منصة بسمة التعليمية",
+    page_icon="🚀",
+    layout="centered"
+)
 
-# إعداد النموذج
-model = genai.GenerativeModel('gemini-1.5-flash')
-
-# --- إعداد الصفحة العامة ---
-st.set_page_config(page_title="مساعد معلمي الدمج", page_icon="🏫", layout="wide")
-
-# إنشاء تبويبات (Tabs) لتنظيم التطبيق
-tab1, tab2 = st.tabs(["🚀 واجهة التطبيق الأساسية", "🌟 من نحن وهدف التطبيق"])
-
-# ==========================================
-# التبويب الثاني: من نحن والهدف
-# ==========================================
-with tab2:
-    st.title("🌟 من نحن")
-    st.write("""
-    نحن منصة تربوية تقنية صُممت بأيادٍ تدرك قيمة المعلم وتؤمن بحق كل طالب في التعلم. نجمع بين الخبرة الميدانية العميقة في نظام الدمج التربوي المصري وقوة الذكاء الاصطناعي، لنضع بين يدي المنظومة التعليمية أداة مبتكرة، سريعة، وسهلة الاستخدام.
-    """)
-    
-    st.markdown("---")
-    
-    st.title("🎯 هدفنا الرئيسي")
-    st.success("""
-    **"تمكين المعلم المصري وتزويده بحلول ذكية وفورية لتكييف المناهج الدراسية، لضمان تقديم تجربة تعليمية دامجة وعادلة لكل طالب من ذوي الهمم."**
-    """)
-    
-    st.markdown("""
-    **وينبثق من هذا الهدف عدة غايات أساسية:**
-    * **توفير الدعم المستمر:** مد جسور التواصل الفعال وتوفير الإرشاد اللحظي للمعلمين، لتخفيف العبء المهني والنفسي عنهم أثناء التحضير والشرح.
-    * **صناعة التمكين والإبداع:** مساعدة كل معلم ليكون متمكناً ومبدعاً في إدارة فصله، وقادراً على تحويل أي مادة علمية جامدة إلى أنشطة تفاعلية.
-    * **تفعيل قانون الدمج تطبيقياً:** تحويل نصوص التشريعات وقوانين الدمج التربوي من الجانب النظري إلى ممارسات عملية حية بخطوات واضحة وبسيطة.
-    * **تحقيق العدالة التعليمية:** إرساء بيئة مدرسية تضمن لكل طالب، مهما كانت قدراته أو تحدياته، حقه الكامل في الفهم، المشاركة، واكتشاف إمكاناته الحقيقية.
-    """)
-
-# ==========================================
-# التبويب الأول: واجهة التطبيق الرئيسية للعمل
-# ==========================================
-with tab1:
-    st.title("🏫 تطبيق دعم معلمي الطلاب ذوي الهمم (الدمج التربوي)")
-    st.markdown("أداة تقنية لدعم الزملاء المعلمين في تكييف الدروس لتناسب مختلف الإعاقات المدمجة بسهولة ويسر.")
-
-    # --- القائمة الجانبية (معلومات قانون الدمج) ---
-    with st.sidebar:
-        st.header("📜 معلومات عن قانون الدمج المصري")
-        st.info("""
-        **قانون الدمج (القرار 252 لسنة 2017):**
-        يهدف إلى دمج الطلاب ذوي الإعاقة البسيطة بمدارس التعليم العام.
-        - الفئات المدمجة: الإعاقة البصرية (المكفوفين وضعاف البصر)، الإعاقة الحركية (الشلل الدماغي البسيط)، الإعاقة السمعية، الإعاقة الذهنية البسيطة، طيف التوحد، وصعوبات التعلم.
-        """)
-        st.success("الصفوف المدعومة: من الأول إلى السادس الابتدائي.")
-
-    # --- المدخلات من المعلم ---
-    col1, col2 = st.columns(2)
-
-    with col1:
-        grade = st.selectbox("📚 اختر الصف الدراسي:", 
-                             ["الصف الأول الابتدائي", "الصف الثاني الابتدائي", "الصف الثالث الابتدائي", 
-                              "الصف الرابع الابتدائي", "الصف الخامس الابتدائي", "الصف السادس الابتدائي"])
-        
-        subject = st.selectbox("📖 اختر المادة الدراسية:", 
-                               ["اللغة العربية", "الرياضيات", "اللغة الإنجليزية (English)", 
-                                "العلوم / اكتشف", "الدراسات الاجتماعية", "أخرى"])
-        
-        disability = st.selectbox("♿ اختر نوع الإعاقة:", 
-                                  ["إعاقة ذهنية بسيطة", "طيف توحد", "إعاقة بصرية (ضعف بصر/كف)", 
-                                   "إعاقة سمعية", "شلل دماغي / إعاقة حركية", "صعوبات تعلم"])
-        
-        teacher_question = st.text_area("❓ هل لديك سؤال محدد أو ملاحظة عن مستوى الطالب؟ (اختياري)")
-
-    with col2:
-        uploaded_image = st.file_uploader("📸 ارفع صورة لصفحة الدرس أو النشاط:", type=["jpg", "jpeg", "png"])
-        if uploaded_image is not None:
-            image = Image.open(uploaded_image)
-            st.image(image, caption="الصورة المرفوعة", use_column_width=True)
-
-    # --- زر التنفيذ ومعالجة البيانات ---
-    if st.button("🚀 تحليل الدرس واستخراج الخطة", type="primary"):
-        if uploaded_image is None:
-            st.error("يرجى رفع صورة الدرس أولاً.")
-        else:
-            with st.spinner("جاري تحليل الدرس وتصميم الخطة التعليمية..."):
-                try:
-                    # تحديد لغة الرد بناءً على المادة المختارة
-                    if "English" in subject or "الإنجليزية" in subject:
-                        lang_instruction = "IMPORTANT: Since the subject is English, you MUST provide the entire response (teaching method, activities, and assessment) in English."
-                        tts_lang = 'en'
-                    else:
-                        lang_instruction = "يجب أن يكون الرد باللغة العربية الفصحى المبسطة."
-                        tts_lang = 'ar'
-
-                    # البرومبت الديناميكي
-                    SYSTEM_PROMPT = f"""
-                    أنت خبير تربوي مصري في مجال الدمج التربوي. قم بتحليل الصورة المرفقة للدرس، وبناءً على الصف، المادة، ونوع الإعاقة، قدم:
-                    1. طريقة التدريس المناسبة.
-                    2. 3 أنشطة تفاعلية.
-                    3. طريقة للتقييم.
-                    {lang_instruction}
-                    يجب أن يكون الرد عملياً ومناسباً لمدارس التعليم الأساسي المصرية.
-                    """
-                    
-                    prompt = f"""
-                    {SYSTEM_PROMPT}
-                    معلومات المعلم:
-                    - الصف الدراسي: {grade}
-                    - المادة الدراسية: {subject}
-                    - نوع الإعاقة: {disability}
-                    - سؤال المعلم: {teacher_question if teacher_question else "لا يوجد سؤال إضافي"}
-                    """
-                    
-                    # إرسال الصورة والنص
-                    response = model.generate_content([prompt, image])
-                    result_text = response.text
-                    
-                    # عرض النتيجة المكتوبة
-                    st.subheader("💡 الخطة التعليمية المقترحة:")
-                    st.write(result_text)
-                    
-                    # --- تحويل النص إلى صوت ---
-                    with st.spinner("جاري إنشاء الرد الصوتي..."):
-                        tts = gTTS(text=result_text, lang=tts_lang, slow=False)
-                        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as fp:
-                            tts.save(fp.name)
-                            audio_file_path = fp.name
-                        
-                        st.audio(audio_file_path, format="audio/mp3", start_time=0)
-                        
-                except Exception as e:
-                    st.error(f"حدث خطأ أثناء المعالجة: {e}")
-
-# --- حقوق الملكية ---
-st.markdown("---")
+# الواجهة الرسمية للتطبيق
 st.markdown("""
-    <div style='text-align: center; color: gray; padding: 10px;'>
-        <b>تم تصميم وتطوير التطبيق بواسطة أ. ولاء مقدام</b><br>
-        منسق وحدة التواصل ودعم المعلمين<br>
-        مدرسة أحمد ضيف الله للتعليم الأساسي
+    <div style="text-align: center; background-color: #f0f7ff; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+        <h1 style="color: #1e3a8a; font-family: 'Cairo', sans-serif;">🚀 منصة بسمة التعليمية</h1>
+        <h3 style="color: #3b82f6;">لتحليل الدروس واستخراج الخطط النموذجية بالذكاء الاصطناعي</h3>
+        <p style="color: #4b5563; font-weight: bold;">تم التطوير بواسطة: أ. ولاء مقدام</p>
+        <p style="color: #6b7280; font-size: 14px;">منسق وحدة التواصل ودعم المعلمين - مدرسة أحمد ضيف الله للتعليم الأساسي</p>
     </div>
 """, unsafe_allow_html=True)
+
+# تفعيل الربط السري بمفتاح جوجل
+if "GOOGLE_API_KEY" in st.secrets:
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+else:
+    st.error("⚠️ خطأ برمجي: لم يتم العثور على المفتاح السري GOOGLE_API_KEY في إعدادات Secrets.")
+
+# خانة رفع الملفات
+uploaded_file = st.file_uploader("📸 ارفعي صورة الدرس أو لقطة الشاشة هنا:", type=["jpg", "jpeg", "png"])
+
+if uploaded_file is not None:
+    # فتح الصورة ومعالجتها برمجياً
+    image = Image.open(uploaded_file)
+    st.image(image, caption="تم رفع صورة الدرس بنجاح", use_container_width=True)
+    
+    # زر التشغيل الحاسم
+    if st.button("🚀 تحليل الدرس واستخراج الخطة النموذجية"):
+        with st.spinner("جاري الآن قراءة الصورة والاتصال بخوادم جوجل لإنتاج الخطة..."):
+            try:
+                # استدعاء النموذج الأحدث والأسرع للصور من جوجل
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                
+                # الأوامر التربوية الموجهة للذكاء الاصطناعي
+                prompt = (
+                    "أنت خبير تربوي وموجه متميز لمعلمي مدرسة أحمد ضيف الله للتعليم الأساسي. "
+                    "قم بتحليل صورة الدرس المرفقة بدقة، واستخرج خطة درس نموذجية متكاملة تحتوي على: "
+                    "1. عنوان الدرس والمستهدفين. "
+                    "2. الأهداف السلوكية (المعرفية والوجدانية والمهارية). "
+                    "3. التمهيد وإثارة الدافعية. "
+                    "4. استراتيجيات التدريس المقترحة والمناسبة للمحتوى المكتوب. "
+                    "5. الأنشطة التعليمية ودور الطالب. "
+                    "6. التقويم (الأسئلة القياسية لضمان الفهم)."
+                )
+                
+                # إرسال الصورة والأمر لجوجل
+                response = model.generate_content([prompt, image])
+                
+                # عرض النتيجة المذهلة للمعلمين
+                st.success("✨ تم تحليل الدرس بنجاح واستخراج الخطة النموذجية!")
+                st.markdown("""<hr style="border:1px solid #3b82f6;">""", unsafe_allow_html=True)
+                st.markdown(response.text)
+                st.markdown("""<hr style="border:1px solid #3b82f6;">""", unsafe_allow_html=True)
+                
+            except Exception as e:
+                st.error("❌ عذراً، واجه النظام صعوبة في معالجة هذه الصورة حالياً.")
+                st.info(f"تفاصيل الاستجابة الفنية: {str(e)}")
