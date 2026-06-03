@@ -11,7 +11,7 @@ GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
 
 # إعداد النموذج
-model = genai.GenerativeModel('gemini-1.5-pro-latest')
+model = genai.GenerativeModel('gemini-pro-vision')
 
 # --- إعداد الصفحة العامة ---
 st.set_page_config(page_title="مساعد معلمي الدمج", page_icon="🏫", layout="wide")
