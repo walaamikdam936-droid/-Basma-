@@ -14,7 +14,7 @@ st.markdown(hide_style, unsafe_allow_html=True)
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
-# 3. الهيدر الرئيسي (يقرأ الصورة الجديدة مباشرة)
+# 3. الهيدر الرئيسي 
 st.image("logo.jpg", use_column_width=True)
 
 st.markdown("""
@@ -43,7 +43,7 @@ with tab1:
         ])
     with col3:
         disability = st.selectbox("🧩 نوع الإعاقة (حسب القرار الوزاري):", [
-            "إعاقة ذهنية بسيطة (بطء تعلم)", "طيف التوحد (دمج خفيف)", 
+            "إعاقة ذهنية بسيطة", "بطء تعلم", "طيف التوحد (دمج خفيف)", 
             "إعاقة بصرية (ضعف بصر)", "إعاقة بصرية (كف بصر)", 
             "إعاقة سمعية (ضعف سمع)", "صعوبات تعلم أكاديمية", "إعاقة حركية (شلل دماغي بسيط)"
         ])
@@ -86,7 +86,7 @@ with tab1:
                         """
                         audio_lang = 'ar'
                     
-                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    model = genai.GenerativeModel('gemini-1.5-flash')
                     response = model.generate_content([prompt, image])
                     result_text = response.text
                     
