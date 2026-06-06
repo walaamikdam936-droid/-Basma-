@@ -22,7 +22,6 @@ if 'analysis_done' not in st.session_state:
     st.session_state.result_text = ""
     st.session_state.audio_bytes = None
     st.session_state.formatted_doc = None
-    st.session_state.audio_lang = 'ar'
 
 # 3. الهيدر الرئيسي
 if os.path.exists("logo.jpg"): st.image("logo.jpg", use_column_width=True)
@@ -35,22 +34,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # دالة التنسيق
-def create_formatted_doc(text, direction, align):
-    html_text = text.replace('\n', '<br>')
-    html_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', html_text)
-    doc_content = f"""
-    <html dir='{direction}'><head><meta charset='utf-8'></head>
-    <body style='font-family: Arial; text-align: {align};'>
-        <h2 style='color: #1e3a8a; text-align: center;'>🌟 الدليل التربوي المخصص - منصة بصمة 🌟</h2>
-        <hr><div>{html_text}</div>
-    </body></html>
-    """
-    return doc_content.encode('utf-8')
+def create_formatted_doc(text):
+    return text.encode('utf-8')
 
 # 4. تقسيم المنصة
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 المساعد الذكي", "🎯 أهداف المنصة وفلسفتها", "⚖️ قانون الدمج", "👥 عن المنصة", "📚 مكتبة الإعاقات والمقالات"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 المساعد الذكي", "🎯 أهداف المنصة", "⚖️ قانون الدمج", "👥 عن المنصة", "📚 مكتبة الإعاقات"])
 
-# --- تبويب المساعد الذكي ---
+# --- الصفحة الأولى: المساعد الذكي ---
 with tab1:
     st.markdown("### 📝 حدد خصائص الدرس وفئة الدمج:")
     col1, col2, col3 = st.columns(3)
@@ -68,23 +58,35 @@ with tab1:
     additional_notes = st.text_area("✍️ ملاحظات المعلم الإضافية (اختياري):")
     uploaded_file = st.file_uploader("ارفعي صورة الدرس هنا (JPG, PNG)", type=["jpg", "png", "jpeg"])
     
-    if uploaded_file and st.button("✨ ابدأ التحليل والاستخراج"):
+    if st.button("✨ ابدأ التحليل والاستخراج"):
         st.session_state.analysis_done = True
+        st.session_state.result_text = "هذا هو الدليل التربوي المخصص للدرس بناءً على اختياراتك..."
         st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
 
     if st.session_state.analysis_done:
-        st.write("تم التحليل! (سيظهر المحتوى هنا)")
-        st.download_button("📥 تحميل Word", "بيانات الخطة", "plan.doc")
+        st.write(st.session_state.result_text)
+        st.download_button("📄 تحميل Word", st.session_state.result_text, "lesson_plan.doc")
+        st.download_button("📑 تحميل PDF", st.session_state.result_text, "lesson_plan.pdf")
+        st.download_button("🎵 تحميل صوت MP3", "صوت", "lesson_audio.mp3")
 
-# --- تبويب الأهداف، القانون، ومن نحن، والمقالات ---
-with tab2: st.write("أهداف المنصة...")
-with tab3: st.write("قانون الدمج المصري...")
+# --- الصفحة الثانية: أهداف المنصة ---
+with tab2:
+    st.markdown("### 🎯 أهداف المنصة")
+    st.write("فلسفة منصة بصمة قائمة على أن لكل طالب بصمة فريدة في التعلم...")
+
+# --- الصفحة الثالثة: قانون الدمج ---
+with tab3:
+    st.markdown("### ⚖️ قانون الدمج")
+    st.write("القرار الوزاري 252 لسنة 2017 يضمن حقوق الطلاب في الدمج...")
+
+# --- الصفحة الرابعة: عن المنصة ---
 with tab4:
-    st.write("منصة بصمة تهدف لتمكين المعلمين.")
-    st.markdown("### تم التطوير والبرمجة بواسطة: ولاء مقدام")
+    st.markdown("### 👥 عن المنصة")
     st.video("https://drive.google.com/file/d/1hGUiJqBkjJhckuO72OMyOul_TtxjTkVJ/preview")
+    st.markdown("---")
+    st.markdown("### تم التطوير والبرمجة بواسطة: ولاء مقدام")
 
+# --- الصفحة الخامسة: مكتبة الإعاقات ---
 with tab5:
     st.markdown("### 📚 مكتبة الإعاقات")
-    with st.expander("إعاقة حركية"):
-        st.info("الوسائل المقترحة: 1. حوامل كتب. 2. أقلام سميكة. 3. كيبورد معدل. 4. طاولات قابلة للتحكم.")
+    st.write("محتوى مفصل عن الإعاقات وطرق التعامل معها...")
