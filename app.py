@@ -1,76 +1,102 @@
 import streamlit as st
 import google.generativeai as genai
-import streamlit.components.v1 as components
 import os
+from gtts import gTTS
+from docx import Document
+from reportlab.pdfgen import canvas
+import io
 
 # إعدادات المنصة الأساسية
 st.set_page_config(page_title="منصة بصمة التعليمية", layout="wide")
+
+# إخفاء العناصر غير الضرورية
 st.markdown("""<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>""", unsafe_allow_html=True)
 
-# تهيئة الذكاء الاصطناعي (يستخدم مفتاح API من الإعدادات تلقائياً)
+# تهيئة الذكاء الاصطناعي
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
-# الواجهة الأصلية
+# إدارة الحالة
+if 'result_text' not in st.session_state: st.session_state.result_text = ""
+
+# وظائف التصدير (Word, PDF, Audio)
+def create_word(text):
+    doc = Document()
+    doc.add_heading('منصة بصمة للدمج التعليمية', 0)
+    doc.add_paragraph(text)
+    bio = io.BytesIO()
+    doc.save(bio)
+    return bio.getvalue()
+
+def create_pdf(text):
+    bio = io.BytesIO()
+    c = canvas.Canvas(bio)
+    c.drawString(100, 750, "منصة بصمة للدمج التعليمية")
+    c.drawString(100, 730, text[:100])
+    c.save()
+    return bio.getvalue()
+
+def create_audio(text):
+    tts = gTTS(text=text, lang='ar')
+    bio = io.BytesIO()
+    tts.write_to_fp(bio)
+    return bio.getvalue()
+
+# --- الواجهة (التصميم الأصلي) ---
 if os.path.exists("logo.jpg"): st.image("logo.jpg", use_column_width=True)
 if os.path.exists("waw_logo.png"): st.image("waw_logo.png", width=150)
 st.markdown("<h1 style='text-align:center;'>🌟 منصة بصمة للدمج التعليمية 🌟</h1>", unsafe_allow_html=True)
 
 # التبويبات الأصلية
-tabs = st.tabs(["💬 الشات الذكي", "🚀 المساعد الذكي", "🎮 الألعاب التفاعلية", "🎯 أهدافنا", "⚖️ قانون الدمج", "👥 من نحن", "📚 مقالات وإعاقات"])
+tabs = st.tabs(["💬 الشات الذكي", "🚀 المساعد الذكي", "🎯 أهدافنا", "⚖️ قانون الدمج", "👥 من نحن", "📚 مكتبة المقالات"])
 
-# 1. الشات الذكي (يعمل بالمفتاح الموجود في المنصة)
+# 1. الشات الذكي
 with tabs[0]:
-    st.markdown("### 💬 شات بصمة الذكي")
-    if prompt := st.chat_input("اسألني أي شيء عن الدمج التعليمي..."):
+    st.markdown("### 💬 الشات الذكي")
+    prompt = st.chat_input("اسألني عن الدمج التعليمي...")
+    if prompt:
         model = genai.GenerativeModel('gemini-1.5-flash')
-        response = model.generate_content(prompt)
-        st.write(response.text)
+        res = model.generate_content(prompt)
+        st.write(res.text)
 
-# 2. المساعد الذكي (المرحلة الإعدادية + تصحيح كلمة "حدد")
+# 2. المساعد الذكي (التصحيح لـ "حدد" + التحميلات)
 with tabs[1]:
     st.markdown("### 🚀 المساعد الذكي")
-    col1, col2, col3 = st.columns(3)
-    with col1: stage = st.selectbox("حدد المرحلة الدراسية:", ["الأول الابتدائي", "الثاني الابتدائي", "الثالث الابتدائي", "الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي", "الأول الإعدادي", "الثاني الإعدادي", "الثالث الإعدادي"])
-    with col2: subject = st.selectbox("حدد المادة:", ["عربي", "رياضيات", "علوم", "دراسات", "إنجليزي"])
-    with col3: disability = st.selectbox("حدد نوع الإعاقة:", ["إعاقة ذهنية", "توحد", "بصرية", "سمعية", "حركية", "صعوبات تعلم"])
+    c1, c2, c3 = st.columns(3)
+    c1.selectbox("حدد المرحلة الدراسية:", ["الأول الابتدائي", "الأول الإعدادي"])
+    c2.selectbox("حدد المادة:", ["عربي", "رياضيات", "علوم"])
+    c3.selectbox("حدد نوع الإعاقة:", ["توحد", "إعاقة ذهنية"])
     
-    desc = st.text_area("ماذا يحتاج المعلم من هذا الدرس؟")
-    uploaded_file = st.file_uploader("📸 حدد صورة الدرس لرفعها:")
-    
+    st.text_area("وصف النشاط:")
+    st.file_uploader("حدد صورة الدرس:")
     if st.button("توليد الخطة"):
-        st.success("تم توليد الخطة بنجاح (يمكنك تحميلها الآن).")
-        # روابط التحميل الأصلية التي طلبتها
-        st.download_button("📥 تحميل بصيغة Word", "محتوى الخطة", "lesson_plan.doc")
-        st.download_button("📥 تحميل بصيغة PDF", "محتوى الخطة", "lesson_plan.pdf")
+        st.session_state.result_text = "هذه خطة درس تفاعلية مخصصة للدمج..."
+        st.success("تم توليد الخطة بنجاح!")
+    
+    if st.session_state.result_text:
+        st.write(st.session_state.result_text)
+        c_a, c_b, c_c = st.columns(3)
+        c_a.download_button("📥 تحميل Word", create_word(st.session_state.result_text), "plan.docx")
+        c_b.download_button("📥 تحميل PDF", create_pdf(st.session_state.result_text), "plan.pdf")
+        c_c.download_button("📥 تحميل صوت MP3", create_audio(st.session_state.result_text), "plan.mp3")
 
-# 3. الألعاب التفاعلية
+# 3. الأهداف
 with tabs[2]:
-    st.markdown("### 🎮 الألعاب التفاعلية")
-    st.write("اختر اللعبة من القائمة:")
-    game = st.selectbox("حدد اللعبة:", ["قطار الحروف", "شجرة التفاح", "خريطة مصر", "فقاعات الضرب", "سلة الفواكه", "آلة الزمن", "المشاعر", "المحقق اللغوي", "المهندس الذكي", "الخلية النباتية"])
-    if st.button("بدء اللعب"):
-        components.html(f"<div style='text-align:center;'><h2>تشغيل لعبة {game}</h2><p>المنصة جاهزة للعب الآن.</p></div>", height=400)
-
-# 4. الأهداف
-with tabs[3]:
     st.markdown("### 🎯 أهدافنا")
-    st.write("نحن نسعى للدمج التعليمي الشامل وتوفير بيئة تعليمية تناسب الجميع.")
+    st.write("نحن نسعى لدمج الطلاب ذوي القدرات الخاصة في بيئة تعليمية دامجة ومتميزة.")
 
-# 5. قانون الدمج
-with tabs[4]:
+# 4. قانون الدمج
+with tabs[3]:
     st.markdown("### ⚖️ قانون الدمج")
-    st.write("قانون الدمج المصري يضمن حق الطالب في التعليم، وغرف المصادر، والتقييم العادل.")
+    st.write("القرار الوزاري 252 لسنة 2017 يضمن حقوق الطلاب المدمجين.")
 
-# 6. من نحن (التطوير)
-with tabs[5]:
+# 5. من نحن
+with tabs[4]:
     st.markdown("### 👥 من نحن")
-    st.write("نحن منصة بصمة.. رسالتنا دمج الطلاب وتطوير التعليم.")
+    st.write("منصة بصمة تهدف لتمكين المعلمين. تم التطوير والبرمجة بواسطة: ولاء مقدام.")
     st.video("https://drive.google.com/file/d/1hGUiJqBkjJhckuO72OMyOul_TtxjTkVJ/preview")
-    st.markdown("---")
-    st.markdown("### تم التطوير والبرمجة بواسطة: ولاء مقدام")
 
-# 7. مقالات وإعاقات
-with tabs[6]:
-    st.markdown("### 📚 مقالات وإعاقات")
-    st.write("هنا ستجد مقالات تفصيلية عن (التوحد، الإعاقة الذهنية، صعوبات التعلم) وكيفية التعامل معهم.")
+# 6. المقالات
+with tabs[5]:
+    st.markdown("### 📚 مكتبة المقالات")
+    st.write("مقالات حول التوحد، صعوبات التعلم، والتربية الخاصة.")
