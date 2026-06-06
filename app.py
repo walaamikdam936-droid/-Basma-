@@ -7,7 +7,7 @@ import re
 import os
 import base64
 
-# 1. إعدادات الصفحة الأساسية
+# 1. إعدادات الصفحة الأساسية الفاخرة
 st.set_page_config(page_title="منصة بصمة للدمج التعليمية", page_icon="🌟", layout="wide")
 
 hide_style = """<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>"""
@@ -24,6 +24,14 @@ if 'analysis_done' not in st.session_state:
     st.session_state.audio_bytes = None
     st.session_state.formatted_doc = None
     st.session_state.audio_lang = 'ar'
+
+# ذاكرة المساعد الذكي للنصوص
+if 'text_analysis_done' not in st.session_state:
+    st.session_state.text_analysis_done = False
+    st.session_state.text_result_text = ""
+    st.session_state.text_audio_bytes = None
+    st.session_state.text_formatted_doc = None
+    st.session_state.text_audio_lang = 'ar'
 
 # 3. الهيدر الرئيسي وعرض الصورتين (الصورة الأصلية واللوجو الجديد)
 col_img1, col_img2 = st.columns(2)
@@ -71,11 +79,18 @@ def create_formatted_doc(text, direction, align):
     """
     return doc_content.encode('utf-8')
 
-# 4. تقسيم المنصة (5 تبويبات تفصيلية)
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 المساعد الذكي", "🎯 أهداف المنصة وفلسفتها", "⚖️ قانون الدمج", "👥 عن المنصة والفيديو الترحيبي", "📚 مكتبة الإعاقات والمقالات"])
+# 4. تقسيم المنصة (6 تبويبات تفصيلية)
+tab1, tab6, tab2, tab3, tab4, tab5 = st.tabs([
+    "🚀 المساعد الذكي (صور)", 
+    "💬 شات المساعد الذكي (نصوص)", 
+    "🎯 أهداف المنصة وفلسفتها", 
+    "⚖️ قانون الدمج", 
+    "👥 عن المنصة والفيديو الترحيبي", 
+    "📚 مكتبة الإعاقات والمقالات"
+])
 
 # ==========================================
-# --- الصفحة الأولى: المساعد الذكي ---
+# --- الصفحة الأولى: المساعد الذكي (الصور) ---
 # ==========================================
 with tab1:
     st.markdown("### 📝 حدد خصائص الدرس وفئة الدمج:")
@@ -85,14 +100,14 @@ with tab1:
             "الصف الأول الابتدائي", "الصف الثاني الابتدائي", "الصف الثالث الابتدائي", 
             "الصف الرابع الابتدائي", "الصف الخامس الابتدائي", "الصف السادس الابتدائي",
             "الصف الأول الإعدادي", "الصف الثاني الإعدادي", "الصف الثالث الإعدادي"
-        ])
+        ], key="stage_img")
     with col2:
-        subject = st.selectbox("📖 المادة الدراسية:", ["لغة عربية", "رياضيات", "علوم / اكتشف", "دراسات اجتماعية", "لغة إنجليزية", "تربية دينية"])
+        subject = st.selectbox("📖 المادة الدراسية:", ["لغة عربية", "رياضيات", "علوم / اكتشف", "دراسات اجتماعية", "لغة إنجليزية", "تربية دينية"], key="subj_img")
     with col3:
-        disability = st.selectbox("🧩 نوع الإعاقة:", ["إعاقة ذهنية بسيطة", "بطء تعلم", "طيف التوحد (دمج خفيف)", "إعاقة بصرية (ضعف بصر)", "إعاقة بصرية (كف بصر)", "إعاقة سمعية (ضعف سمع)", "صعوبات تعلم أكاديمية", "إعاقة حركية (شلل دماغي بسيط)"])
+        disability = st.selectbox("🧩 نوع الإعاقة:", ["إعاقة ذهنية بسيطة", "بطء تعلم", "طيف التوحد (دمج خفيف)", "إعاقة بصرية (ضعف بصر)", "إعاقة بصرية (كف بصر)", "إعاقة سمعية (ضعف سمع)", "صعوبات تعلم أكاديمية", "إعاقة حركية (شلل دماغي بسيط)"], key="dis_img")
 
     st.markdown("---")
-    additional_notes = st.text_area("✍️ ملاحظات المعلم الإضافية (اختياري):", placeholder="اكتب هنا أي تفاصيل خاصة بمستوى الطالب...")
+    additional_notes = st.text_area("✍️ ملاحظات المعلم الإضافية (اختياري):", placeholder="اكتب هنا أي تفاصيل خاصة بمستوى الطالب...", key="notes_img")
 
     st.markdown("---")
     st.markdown("### 📸 استخراج الخطة والأنشطة (نصياً وصوتياً)")
@@ -102,7 +117,7 @@ with tab1:
         image = Image.open(uploaded_file)
         st.image(image, caption="تم رفع الصورة بنجاح", width=350)
         
-        if st.button("✨ ابدأ التحليل والاستخراج", use_container_width=True):
+        if st.button("✨ ابدأ التحليل والاستخراج (صورة)", use_container_width=True):
             with st.spinner("الذكاء الاصطناعي يقوم بالتحليل..."):
                 try:
                     if subject == "لغة إنجليزية":
@@ -118,10 +133,10 @@ with tab1:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang = 'ar'
                     
+                    # الاعتماد على النموذج المتطور بناءً على توجيهاتك
                     model = genai.GenerativeModel('gemini-3.5-flash')
                     response = model.generate_content([prompt, image])
                     
-                    # حفظ النتائج في ذاكرة الجلسة
                     st.session_state.result_text = response.text
                     st.session_state.audio_lang = audio_lang
                     
@@ -141,7 +156,6 @@ with tab1:
                 except Exception as e:
                     st.error("حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.")
 
-    # عرض النتائج من الذاكرة (لكي لا تختفي عند ضغط التحميل)
     if st.session_state.analysis_done:
         text_dir = "rtl" if st.session_state.audio_lang == 'ar' else "ltr"
         text_align = "right" if st.session_state.audio_lang == 'ar' else "left"
@@ -151,14 +165,98 @@ with tab1:
             st.markdown(f"""<div style="background-color: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #cbd5e1; direction: {text_dir}; text-align: {text_align}; line-height: 1.8;">""" + st.session_state.result_text + "</div>", unsafe_allow_html=True)
         with res_tab2:
             st.audio(st.session_state.audio_bytes, format='audio/mp3')
-            
             col_btn1, col_btn2, col_btn3 = st.columns(3)
-            col_btn1.download_button("📄 تحميل Word منسق", data=st.session_state.formatted_doc, file_name="lesson_plan.doc", mime="application/msword", use_container_width=True)
-            col_btn2.download_button("📑 تحميل كـ PDF (عبر المتصفح)", data=st.session_state.formatted_doc, file_name="lesson_plan.html", mime="text/html", use_container_width=True)
-            col_btn3.download_button("🎵 تحميل الملف الصوتي MP3", data=st.session_state.audio_bytes, file_name="lesson_audio.mp3", mime="audio/mp3", use_container_width=True)
+            col_btn1.download_button("📄 تحميل Word (تحليل الصورة)", data=st.session_state.formatted_doc, file_name="lesson_plan_img.doc", mime="application/msword", use_container_width=True)
+            col_btn2.download_button("📑 تحميل كـ PDF (تحليل الصورة)", data=st.session_state.formatted_doc, file_name="lesson_plan_img.html", mime="text/html", use_container_width=True)
+            col_btn3.download_button("🎵 تحميل الملف الصوتي", data=st.session_state.audio_bytes, file_name="lesson_audio_img.mp3", mime="audio/mp3", use_container_width=True)
 
 # ==========================================
-# --- الصفحة الثانية: أهداف المنصة وفلسفتها ---
+# --- الصفحة الجديدة: شات المساعد الذكي (نصوص) ---
+# ==========================================
+with tab6:
+    st.markdown("""
+    <div style="background-color: #e0f2fe; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; border-right: 5px solid #0284c7;">
+        <h2 style="color: #0369a1; margin:0; font-family: 'Cairo', sans-serif;">💬 شات التحليل النصي للدروس</h2>
+        <p style="color: #0c4a6e; font-size: 18px; margin-top: 5px;">الصق نص الدرس أو الفقرة وسيقوم المساعد بتحليلها فوراً</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col1_t, col2_t, col3_t = st.columns(3)
+    with col1_t:
+        stage_t = st.selectbox("📚 المرحلة الدراسية:", [
+            "الصف الأول الابتدائي", "الصف الثاني الابتدائي", "الصف الثالث الابتدائي", 
+            "الصف الرابع الابتدائي", "الصف الخامس الابتدائي", "الصف السادس الابتدائي",
+            "الصف الأول الإعدادي", "الصف الثاني الإعدادي", "الصف الثالث الإعدادي"
+        ], key="stage_text")
+    with col2_t:
+        subject_t = st.selectbox("📖 المادة الدراسية:", ["لغة عربية", "رياضيات", "علوم / اكتشف", "دراسات اجتماعية", "لغة إنجليزية", "تربية دينية"], key="subj_text")
+    with col3_t:
+        disability_t = st.selectbox("🧩 نوع الإعاقة:", ["إعاقة ذهنية بسيطة", "بطء تعلم", "طيف التوحد (دمج خفيف)", "إعاقة بصرية (ضعف بصر)", "إعاقة بصرية (كف بصر)", "إعاقة سمعية (ضعف سمع)", "صعوبات تعلم أكاديمية", "إعاقة حركية (شلل دماغي بسيط)"], key="dis_text")
+
+    st.markdown("---")
+    lesson_text = st.text_area("📖 الصق أو اكتب نص الدرس هنا:", height=150, placeholder="قم بنسخ نص محتوى الدرس والصقه هنا...")
+    additional_notes_t = st.text_area("✍️ ملاحظات المعلم الإضافية (اختياري):", placeholder="اكتب هنا أي تفاصيل خاصة بمستوى الطالب...", key="notes_text")
+
+    st.markdown("---")
+    
+    if st.button("✨ ابدأ التحليل (نصياً)", use_container_width=True):
+        if not lesson_text.strip():
+            st.warning("يرجى إدخال نص الدرس أولاً!")
+        else:
+            with st.spinner("الذكاء الاصطناعي يقوم بتحليل النص..."):
+                try:
+                    if subject_t == "لغة إنجليزية":
+                        prompt = f"You are a special education expert. Analyze the following lesson text and provide a plan for a grade ({stage_t}) English lesson for a student with ({disability_t}). REQUIRED: Fluent English only.\n\nLesson Text:\n{lesson_text}\n"
+                        if additional_notes_t:
+                            prompt += f"\nTeacher notes: '{additional_notes_t}'. Integrate these notes."
+                        prompt += "\nPoints: 1. Teaching method 2. Three activities 3. Evaluation 4. Teacher Support Tip."
+                        audio_lang_t = 'en'
+                    else:
+                        prompt = f"أنت خبير تربوي مصري متخصص في التربية الخاصة والدمج التعليمي. حلل نص الدرس التالي وقدم دليلاً لمعلم يدرس طالب في ({stage_t}) لمادة ({subject_t}) يعاني من ({disability_t}).\n\nنص الدرس:\n{lesson_text}\n"
+                        if additional_notes_t:
+                            prompt += f"\nملاحظات المعلم: '{additional_notes_t}'. وظفها إلزامياً في إجابتك وصمم الأنشطة بناءً عليها."
+                        prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
+                        audio_lang_t = 'ar'
+                    
+                    # الاعتماد على النموذج المتطور بناءً على توجيهاتك
+                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    response = model.generate_content(prompt)
+                    
+                    st.session_state.text_result_text = response.text
+                    st.session_state.text_audio_lang = audio_lang_t
+                    
+                    text_dir_t = "rtl" if audio_lang_t == 'ar' else "ltr"
+                    text_align_t = "right" if audio_lang_t == 'ar' else "left"
+                    
+                    st.session_state.text_formatted_doc = create_formatted_doc(st.session_state.text_result_text, text_dir_t, text_align_t)
+                    
+                    tts_t = gTTS(text=st.session_state.text_result_text, lang=audio_lang_t, slow=False)
+                    audio_io_t = io.BytesIO()
+                    tts_t.write_to_fp(audio_io_t)
+                    st.session_state.text_audio_bytes = audio_io_t.getvalue()
+                    
+                    st.session_state.text_analysis_done = True
+                    st.success("🎉 تم إعداد الدليل التربوي للنص بنجاح!")
+                    
+                except Exception as e:
+                    st.error("حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.")
+
+    if st.session_state.text_analysis_done:
+        text_dir_t = "rtl" if st.session_state.text_audio_lang == 'ar' else "ltr"
+        text_align_t = "right" if st.session_state.text_audio_lang == 'ar' else "left"
+        
+        res_tab1_t, res_tab2_t = st.tabs(["📑 الخطة المفصلة (نص)", "📥 الاستماع والتحميل"])
+        with res_tab1_t:
+            st.markdown(f"""<div style="background-color: #f0fdf4; padding: 20px; border-radius: 10px; border: 1px solid #bbf7d0; direction: {text_dir_t}; text-align: {text_align_t}; line-height: 1.8;">""" + st.session_state.text_result_text + "</div>", unsafe_allow_html=True)
+        with res_tab2_t:
+            st.audio(st.session_state.text_audio_bytes, format='audio/mp3')
+            col_btn1_t, col_btn2_t, col_btn3_t = st.columns(3)
+            col_btn1_t.download_button("📄 تحميل Word (تحليل النص)", data=st.session_state.text_formatted_doc, file_name="text_lesson_plan.doc", mime="application/msword", use_container_width=True)
+            col_btn2_t.download_button("📑 تحميل كـ PDF (تحليل النص)", data=st.session_state.text_formatted_doc, file_name="text_lesson_plan.html", mime="text/html", use_container_width=True)
+            col_btn3_t.download_button("🎵 تحميل الملف الصوتي", data=st.session_state.text_audio_bytes, file_name="text_lesson_audio.mp3", mime="audio/mp3", use_container_width=True)
+
+# ==========================================
+# --- الصفحة الثالثة: أهداف المنصة وفلسفتها ---
 # ==========================================
 with tab2:
     st.markdown("""
@@ -184,7 +282,7 @@ with tab2:
     """, unsafe_allow_html=True)
 
 # ==========================================
-# --- الصفحة الثالثة: قانون الدمج ---
+# --- الصفحة الرابعة: قانون الدمج ---
 # ==========================================
 with tab3:
     st.markdown("""
@@ -197,7 +295,7 @@ with tab3:
     """, unsafe_allow_html=True)
 
 # ==========================================
-# --- الصفحة الرابعة: عن المنصة والفيديو الترحيبي ---
+# --- الصفحة الخامسة: عن المنصة والفيديو الترحيبي ---
 # ==========================================
 with tab4:
     st.markdown("""
@@ -219,7 +317,7 @@ with tab4:
     """, unsafe_allow_html=True)
 
 # ==========================================
-# --- الصفحة الخامسة: مكتبة الإعاقات والمقالات ---
+# --- الصفحة السادسة: مكتبة الإعاقات والمقالات ---
 # ==========================================
 with tab5:
     st.markdown("""
