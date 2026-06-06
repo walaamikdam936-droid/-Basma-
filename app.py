@@ -5,8 +5,9 @@ from gtts import gTTS
 import io
 import re
 import os
+import base64
 
-# 1. إعدادات الصفحة الأساسية الفاخرة
+# 1. إعدادات الصفحة الأساسية
 st.set_page_config(page_title="منصة بصمة للدمج التعليمية", page_icon="🌟", layout="wide")
 
 hide_style = """<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>"""
@@ -24,8 +25,14 @@ if 'analysis_done' not in st.session_state:
     st.session_state.formatted_doc = None
     st.session_state.audio_lang = 'ar'
 
-# 3. الهيدر الرئيسي وتثبيت اللوجو المعتمد
-st.image("logo.jpg", use_column_width=True)
+# 3. الهيدر الرئيسي وعرض الصورتين (الصورة الأصلية واللوجو الجديد)
+col_img1, col_img2 = st.columns(2)
+with col_img1:
+    if os.path.exists("logo.jpg"):
+        st.image("logo.jpg", use_column_width=True)
+with col_img2:
+    if os.path.exists("waw_logo.png"):
+        st.image("waw_logo.png", use_column_width=True)
 
 st.markdown("""
     <div style="text-align: center; background-color: #1e3a8a; padding: 30px; border-radius: 15px; margin-bottom: 25px; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
@@ -34,14 +41,28 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# دالة خبيرة لتحويل النصوص إلى صيغة Word و Web/PDF
+# دالة خبيرة لتحويل الصورة إلى كود يمكن قراءته داخل الملفات المحملة
+def get_base64_image(image_path):
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode('utf-8')
+    except Exception:
+        return ""
+
+# دالة خبيرة لتحويل النصوص إلى صيغة Word و Web/PDF مع دمج اللوجو
 def create_formatted_doc(text, direction, align):
     html_text = text.replace('\n', '<br>')
     html_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', html_text)
+    
+    # دمج اللوجو في أعلى الملف المحمل
+    logo_base64 = get_base64_image("waw_logo.png")
+    img_html = f'<div style="text-align: center; margin-bottom: 20px;"><img src="data:image/png;base64,{logo_base64}" width="150" /></div>' if logo_base64 else ''
+    
     doc_content = f"""
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
     <head><meta charset='utf-8'></head>
     <body dir='{direction}' style='font-family: "Arial", sans-serif; text-align: {align}; line-height: 1.8; font-size: 16px;'>
+        {img_html}
         <h2 style='color: #1e3a8a; text-align: center;'>🌟 الدليل التربوي المخصص - منصة بصمة 🌟</h2>
         <hr>
         <div>{html_text}</div>
@@ -50,7 +71,7 @@ def create_formatted_doc(text, direction, align):
     """
     return doc_content.encode('utf-8')
 
-# 4. تقسيم المنصة الهيكلي المعتمد (5 تبويبات تفصيلية)
+# 4. تقسيم المنصة (5 تبويبات تفصيلية)
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 المساعد الذكي", "🎯 أهداف المنصة وفلسفتها", "⚖️ قانون الدمج", "👥 عن المنصة والفيديو الترحيبي", "📚 مكتبة الإعاقات والمقالات"])
 
 # ==========================================
@@ -100,6 +121,7 @@ with tab1:
                     model = genai.GenerativeModel('gemini-3.5-flash')
                     response = model.generate_content([prompt, image])
                     
+                    # حفظ النتائج في ذاكرة الجلسة
                     st.session_state.result_text = response.text
                     st.session_state.audio_lang = audio_lang
                     
@@ -119,6 +141,7 @@ with tab1:
                 except Exception as e:
                     st.error("حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.")
 
+    # عرض النتائج من الذاكرة (لكي لا تختفي عند ضغط التحميل)
     if st.session_state.analysis_done:
         text_dir = "rtl" if st.session_state.audio_lang == 'ar' else "ltr"
         text_align = "right" if st.session_state.audio_lang == 'ar' else "left"
@@ -140,7 +163,7 @@ with tab1:
 with tab2:
     st.markdown("""
     <div style="background-color: #f0fdf4; padding: 30px; border-radius: 15px; border-right: 6px solid #16a34a; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 25px;">
-        <h2 style="color: #166534; font-family: 'Cairo', sans-serif; margin-bottom: 15px;">فلسفة "بصمة".. لماذا هذا الاسم?</h2>
+        <h2 style="color: #166534; font-family: 'Cairo', sans-serif; margin-bottom: 15px;">فلسفة "بصمة".. لماذا هذا الاسم؟</h2>
         <p style="font-size: 20px; line-height: 2; text-align: justify; color: #1e293b; font-weight: 500;">
             لقد خلقنا الله سبحانه وتعالى مختلفين، وكما أن لكل إنسان <b>"بصمة إصبع"</b> فريدة لا تتطابق أبداً مع أي إنسان آخر على وجه الأرض، فإن لكل طالب أيضاً بصمته العقلية والنفسية الخاصة في التعلم. فكرة "منصة بصمة" نابعة من إيماننا العميق بأن التعليم ليس قالباً جامداً يُصب فيه جميع الطلاب، بل هو ماء مرن يتشكل ليناسب وعاء كل متعلم. نحن لا نرى في فئات الدمج "طلاباً يعانون من قصور"، بل نراهم طلاباً يمتلكون "بصمات مختلفة" تحتاج فقط إلى أداة ذكية تقرأ هذه البصمة وتقدم لها المعرفة بالطريقة التي تفهمها وتتفاعل معها.
         </p>
@@ -168,7 +191,7 @@ with tab3:
     <div style="background-color: #fffbeb; padding: 30px; border-radius: 10px; border-right: 6px solid #f59e0b;">
         <h2 style="color: #b45309; margin-bottom: 20px;">⚖️ قراءة مفصلة في قانون الدمج المصري (القرار الوزاري 252 لسنة 2017)</h2>
         <p style="font-size: 20px; line-height: 2; text-align: justify; color: #451a03; margin-bottom: 20px;">
-            يُعد القرار الوزاري المصري رقم 252 لسنة 2017 بمثابة المظلة القانونية والتربوية التي تضمن حقوق الطلاب ذوي الإعاقة البسيطة في تلقي تعليم متكافئ داخل مدارس التعليم العام والفني. يهدف هذا القرار إلى إنهاء العزلة التعليمية لهذه الفئات، حيث يسمح بدمج الطلاب الذين يعانون من إعاقات بصرية أو سمعية أو حركية، بالإضافة إلى ذوي الإعاقة الذهنية البسيطة، وبطء التعلم، واضطراب طيف التوحد (الدمج الخفيف)، ومتلازمة داون. وقد راعى القانون الفروق الفردية العميقة من خلال إقرار استثناءات تنظيمية هامة، مثل التجاوز عن شرط السن عند القبول بالمدارس بزيادة تصل إلى عامين عن الطلاب العاديين, وذلك لضمان حصول كل طالب على فرصته العادلة والكاملة في التعليم ضمن بيئة مدرسية طبيعية تدعم تقبل الاختلاف وتساند جهود الأسرة.
+            يُعد القرار الوزاري المصري رقم 252 لسنة 2017 بمثابة المظلة القانونية والتربوية التي تضمن حقوق الطلاب ذوي الإعاقة البسيطة في تلقي تعليم متكافئ داخل مدارس التعليم العام والفني. يهدف هذا القرار إلى إنهاء العزلة التعليمية لهذه الفئات، حيث يسمح بدمج الطلاب الذين يعانون من إعاقات بصرية أو سمعية أو حركية، بالإضافة إلى ذوي الإعاقة الذهنية البسيطة، وبطء التعلم، واضطراب طيف التوحد (الدمج الخفيف)، ومتلازمة داون. وقد راعى القانون الفروق الفردية العميقة من خلال إقرار استثناءات تنظيمية هامة، مثل التجاوز عن شرط السن عند القبول بالمدارس بزيادة تصل إلى عامين عن الطلاب العاديين، وذلك لضمان حصول كل طالب على فرصته العادلة والكاملة في التعليم ضمن بيئة مدرسية طبيعية تدعم تقبل الاختلاف وتساند جهود الأسرة.
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -186,11 +209,9 @@ with tab4:
     </div>
     """, unsafe_allow_html=True)
     
-    # تضمين الفيديو الترحيبي التفاعلي من رابط Google Drive
     st.markdown("### 🎬 الفيديو التعريفي للمنصة")
-    st.video("https://drive.google.com/file/d/1hGUiJqBkjJhckuO72OMyOul_TtxjTkVJ/preview")
+    st.markdown('<iframe src="https://drive.google.com/file/d/1hGUiJqBkjJhckuO72OMyOul_TtxjTkVJ/preview" width="100%" height="450" style="border: none; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></iframe>', unsafe_allow_html=True)
     
-    # ركن الحقوق الحصرية لولاء مقدام (مستقل وبدون أي مؤسسات)
     st.markdown("""
     <div style="background-color: #ffffff; padding: 25px; border-radius: 12px; text-align: center; border: 2px solid #0f766e; margin-top: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
         <h2 style="color: #0f766e; font-family: 'Cairo', sans-serif; margin: 0; font-size: 28px;">تم الابتكار والتصميم والبرمجة بواسطة ولاء مقدام</h2>
@@ -301,9 +322,9 @@ with tab5:
         st.markdown("""
         ---
         ### 💡 مراجعة لأهم استراتيجيات تدريس طلاب الدمج المضمنة في المنصة:
-        1. **لعب الأدوار:** تضع الطالب في مواقف حياتية مبسطة، مما يحسن من مهاراته الاجتماعية والتواصلية.
-        2. **التعلم التعاوني:** تذيب الفوارق بين الطلاب العاديين والمدمجين وتخلق بيئة من الدعم المتبادل.
-        3. **الكرسي الساخن:** تكسر حاجز الخجل والخوف لدى الطالب المدمج ويرفع ثقته بنفسه.
-        4. **المعلم الصغير:** تمنح الطالب المدمج دور القيادة ولو لدقائق معدودة، مما يبرز كيانه المستقل.
-        5. **الألعاب التعليمية:** المدخل السحري لعقل الطفل وتحويل المنهج الجاف إلى متعة وتحدٍ.
+        1. **لعب الأدوار:** تضع الطالب في مواقف حياتية مبسطة، مما يحسن من مهاراته الاجتماعية والتواصلية (ممتازة للتوحد والإعاقة الذهنية).
+        2. **التعلم التعاوني:** تذيب الفوارق بين الطلاب العاديين والمدمجين، وتخلق بيئة من الدعم المتبادل والألفة.
+        3. **الكرسي الساخن:** تكسر حاجز الخجل والخوف لدى الطالب المدمج، حيث يجلس ليجيب عن أسئلة في مستوى قدراته، مما يرفع ثقته بنفسه للسماء.
+        4. **المعلم الصغير:** تمنح الطالب المدمج دور القيادة ولو لدقائق معدودة (مثل توزيع الأوراق أو شرح فكرة بسيطة)، مما يجعله يشعر بأهميته وكيانه المستقل.
+        5. **الألعاب التعليمية:** المدخل السحري لعقل أي طفل؛ فهي تحول المنهج الجاف إلى متعة وتحدٍ، وتناسب جميع الإعاقات بلا استثناء إذا تم توظيفها بذكاء.
         """)
