@@ -57,10 +57,9 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚀 المساعد الذكي", "🎯 
 # --- الصفحة الأولى: المساعد الذكي ---
 # ==========================================
 with tab1:
-    st.markdown("### 📝 حددي خصائص الدرس وفئة الدمج:")
+    st.markdown("### 📝 حدد خصائص الدرس وفئة الدمج:")
     col1, col2, col3 = st.columns(3)
     with col1:
-        # تم تعديل القائمة المنسدلة لتشمل الإعدادي
         stage = st.selectbox("📚 المرحلة الدراسية:", ["الصف الأول الابتدائي", "الصف الثاني الابتدائي", "الصف الثالث الابتدائي", "الصف الرابع الابتدائي", "الصف الخامس الابتدائي", "الصف السادس الابتدائي", "الصف الأول الإعدادي", "الصف الثاني الإعدادي", "الصف الثالث الإعدادي"])
     with col2:
         subject = st.selectbox("📖 المادة الدراسية:", ["لغة عربية", "رياضيات", "علوم / اكتشف", "دراسات اجتماعية", "لغة إنجليزية", "تربية دينية"])
@@ -72,7 +71,7 @@ with tab1:
 
     st.markdown("---")
     st.markdown("### 📸 استخراج الخطة والأنشطة (نصياً وصوتياً)")
-    uploaded_file = st.file_uploader("ارفعي صورة الدرس هنا (JPG, PNG)", type=["jpg", "png", "jpeg"])
+    uploaded_file = st.file_uploader("ارفع صورة الدرس هنا (JPG, PNG)", type=["jpg", "png", "jpeg"])
     
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
@@ -94,7 +93,7 @@ with tab1:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang = 'ar'
                     
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    model = genai.GenerativeModel('gemini-3.5-flash')
                     response = model.generate_content([prompt, image])
                     
                     # حفظ النتائج في ذاكرة الجلسة
@@ -186,7 +185,6 @@ with tab4:
     </div>
     """, unsafe_allow_html=True)
     
-    # تمت إضافة الفيديو بناءً على الرابط المقدم
     st.video("https://drive.google.com/file/d/1hGUiJqBkjJhckuO72OMyOul_TtxjTkVJ/preview")
     
     st.markdown("""
@@ -206,7 +204,7 @@ with tab5:
     </div>
     """, unsafe_allow_html=True)
     
-    lib_tab1, lib_tab2 = st.tabs(["📖 مقالات الإعاقات، طرق التدريس والشخصيات الملهمة", "📝 مقالات الدمج المصرية واستراتيجيات التدريس"])
+    lib_tab1, lib_tab2 = st.tabs(["📖 مقالات الإعاقات والشخصيات الملهمة", "📝 مقالات الدمج المصرية واستراتيجيات التدريس"])
     
     with lib_tab1:
         with st.expander("👁️ الإعاقة البصرية (ضعف البصر وكف البصر)"):
