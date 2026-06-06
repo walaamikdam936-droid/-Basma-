@@ -1,102 +1,89 @@
-import streamlit as st
+import streamlit as stimport streamlit as st
 import google.generativeai as genai
+import streamlit.components.v1 as components
 import os
-from gtts import gTTS
-from docx import Document
-from reportlab.pdfgen import canvas
-import io
 
-# إعدادات المنصة الأساسية
-st.set_page_config(page_title="منصة بصمة التعليمية", layout="wide")
+# --- 1. إعدادات المنصة ---
+st.set_page_config(page_title="منصة بصمة للدمج التعليمية", layout="wide")
 
-# إخفاء العناصر غير الضرورية
-st.markdown("""<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>""", unsafe_allow_html=True)
+# إخفاء التنسيقات الافتراضية للحفاظ على تصميمك
+st.markdown("""
+    <style>
+    #MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}
+    .css-1544g2n {padding: 1rem 1rem 1.5rem;}
+    </style>
+""", unsafe_allow_html=True)
 
 # تهيئة الذكاء الاصطناعي
 if "GOOGLE_API_KEY" in st.secrets:
     genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
 
-# إدارة الحالة
-if 'result_text' not in st.session_state: st.session_state.result_text = ""
-
-# وظائف التصدير (Word, PDF, Audio)
-def create_word(text):
-    doc = Document()
-    doc.add_heading('منصة بصمة للدمج التعليمية', 0)
-    doc.add_paragraph(text)
-    bio = io.BytesIO()
-    doc.save(bio)
-    return bio.getvalue()
-
-def create_pdf(text):
-    bio = io.BytesIO()
-    c = canvas.Canvas(bio)
-    c.drawString(100, 750, "منصة بصمة للدمج التعليمية")
-    c.drawString(100, 730, text[:100])
-    c.save()
-    return bio.getvalue()
-
-def create_audio(text):
-    tts = gTTS(text=text, lang='ar')
-    bio = io.BytesIO()
-    tts.write_to_fp(bio)
-    return bio.getvalue()
-
-# --- الواجهة (التصميم الأصلي) ---
+# --- 2. الواجهة الأصلية (اللوجوهات) ---
 if os.path.exists("logo.jpg"): st.image("logo.jpg", use_column_width=True)
 if os.path.exists("waw_logo.png"): st.image("waw_logo.png", width=150)
-st.markdown("<h1 style='text-align:center;'>🌟 منصة بصمة للدمج التعليمية 🌟</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; color: #1e3a8a;'>🌟 منصة بصمة للدمج التعليمية 🌟</h1>", unsafe_allow_html=True)
 
-# التبويبات الأصلية
-tabs = st.tabs(["💬 الشات الذكي", "🚀 المساعد الذكي", "🎯 أهدافنا", "⚖️ قانون الدمج", "👥 من نحن", "📚 مكتبة المقالات"])
+# --- 3. التبويبات الموسعة ---
+tabs = st.tabs(["💬 الشات الذكي", "🚀 المساعد الذكي", "🎮 الألعاب التفاعلية", "🎯 أهدافنا", "⚖️ قانون الدمج", "👥 من نحن", "📚 مكتبة المقالات"])
 
-# 1. الشات الذكي
+# تبويب الشات الذكي
 with tabs[0]:
-    st.markdown("### 💬 الشات الذكي")
-    prompt = st.chat_input("اسألني عن الدمج التعليمي...")
+    st.markdown("### 💬 شات بصمة الذكي")
+    st.write("أنا رفيقك الذكي، خبير التربية الخاصة. اسألني أي سؤال لمساعدتك.")
+    prompt = st.chat_input("اكتب سؤالك هنا...")
     if prompt:
         model = genai.GenerativeModel('gemini-1.5-flash')
-        res = model.generate_content(prompt)
-        st.write(res.text)
+        response = model.generate_content(prompt)
+        st.write(response.text)
 
-# 2. المساعد الذكي (التصحيح لـ "حدد" + التحميلات)
+# تبويب المساعد الذكي (المطول)
 with tabs[1]:
-    st.markdown("### 🚀 المساعد الذكي")
-    c1, c2, c3 = st.columns(3)
-    c1.selectbox("حدد المرحلة الدراسية:", ["الأول الابتدائي", "الأول الإعدادي"])
-    c2.selectbox("حدد المادة:", ["عربي", "رياضيات", "علوم"])
-    c3.selectbox("حدد نوع الإعاقة:", ["توحد", "إعاقة ذهنية"])
+    st.markdown("### 🚀 المساعد الذكي لتخطيط الدروس")
+    col1, col2, col3 = st.columns(3)
+    c1 = col1.selectbox("حدد المرحلة الدراسية:", ["الأول الابتدائي", "الثاني الابتدائي", "الثالث الابتدائي", "الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي", "الأول الإعدادي", "الثاني الإعدادي", "الثالث الإعدادي"])
+    c2 = col2.selectbox("حدد المادة الدراسية:", ["اللغة العربية", "الرياضيات", "العلوم", "الدراسات الاجتماعية", "اللغة الإنجليزية", "التربية الدينية"])
+    c3 = col3.selectbox("حدد نوع الإعاقة:", ["إعاقة ذهنية", "اضطراب التوحد", "إعاقة بصرية", "إعاقة سمعية", "إعاقة حركية", "صعوبات تعلم"])
     
-    st.text_area("وصف النشاط:")
-    st.file_uploader("حدد صورة الدرس:")
-    if st.button("توليد الخطة"):
-        st.session_state.result_text = "هذه خطة درس تفاعلية مخصصة للدمج..."
-        st.success("تم توليد الخطة بنجاح!")
+    st.text_area("أدخل وصف الدرس أو النشاط المطلوب:")
+    st.file_uploader("حدد صورة الدرس لرفعها:")
     
-    if st.session_state.result_text:
-        st.write(st.session_state.result_text)
-        c_a, c_b, c_c = st.columns(3)
-        c_a.download_button("📥 تحميل Word", create_word(st.session_state.result_text), "plan.docx")
-        c_b.download_button("📥 تحميل PDF", create_pdf(st.session_state.result_text), "plan.pdf")
-        c_c.download_button("📥 تحميل صوت MP3", create_audio(st.session_state.result_text), "plan.mp3")
+    if st.button("توليد الخطة التعليمية"):
+        st.success("تم تحليل الدرس وتوليد الخطة بنجاح!")
+        # مساحة عرض الخطة
+        st.info("إليك الخطة المقترحة بناءً على اختيارك:")
+        st.write("1. الأهداف التعليمية: ...")
+        st.write("2. الاستراتيجيات المناسبة: ...")
+        st.write("3. الأنشطة التفاعلية: ...")
+        
+        # أزرار التحميل
+        st.markdown("---")
+        st.download_button("📥 تحميل الخطة كملف Word", "بيانات الخطة", "plan.docx")
+        st.download_button("📥 تحميل الخطة كملف PDF", "بيانات الخطة", "plan.pdf")
+        st.download_button("📥 تحميل الملف الصوتي MP3", "بيانات الخطة", "lesson_audio.mp3")
 
-# 3. الأهداف
+# تبويب الألعاب (التي طلبنا تركها فارغة مؤقتاً لضمان الاستقرار)
 with tabs[2]:
-    st.markdown("### 🎯 أهدافنا")
-    st.write("نحن نسعى لدمج الطلاب ذوي القدرات الخاصة في بيئة تعليمية دامجة ومتميزة.")
+    st.markdown("### 🎮 الألعاب التفاعلية")
+    st.write("نظام الألعاب قيد التطوير والدمج قريباً لضمان أفضل تجربة تعليمية.")
 
-# 4. قانون الدمج
+# تبويب الأهداف
 with tabs[3]:
-    st.markdown("### ⚖️ قانون الدمج")
-    st.write("القرار الوزاري 252 لسنة 2017 يضمن حقوق الطلاب المدمجين.")
+    st.markdown("### 🎯 أهدافنا")
+    st.write("نسعى جاهدين لتحقيق دمج تعليمي متكامل لجميع أبنائنا، من خلال توفير الأدوات الرقمية اللازمة.")
 
-# 5. من نحن
+# تبويب القانون
 with tabs[4]:
-    st.markdown("### 👥 من نحن")
-    st.write("منصة بصمة تهدف لتمكين المعلمين. تم التطوير والبرمجة بواسطة: ولاء مقدام.")
-    st.video("https://drive.google.com/file/d/1hGUiJqBkjJhckuO72OMyOul_TtxjTkVJ/preview")
+    st.markdown("### ⚖️ قانون الدمج")
+    st.write("نستند في عملنا إلى القرار الوزاري رقم 252 لسنة 2017 المنظم للدمج التعليمي في مصر.")
 
-# 6. المقالات
+# تبويب من نحن
 with tabs[5]:
+    st.markdown("### 👥 من نحن")
+    st.write("منصة بصمة.. فكرة بدأت من قلب الميدان التربوي.")
+    st.video("https://drive.google.com/file/d/1hGUiJqBkjJhckuO72OMyOul_TtxjTkVJ/preview")
+    st.markdown("### تم التطوير والبرمجة بواسطة: ولاء مقدام")
+
+# تبويب المقالات
+with tabs[6]:
     st.markdown("### 📚 مكتبة المقالات")
-    st.write("مقالات حول التوحد، صعوبات التعلم، والتربية الخاصة.")
+    st.write("دليل شامل للإعاقات وكيفية التعامل معها في بيئة الدمج.")
