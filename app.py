@@ -1,4 +1,4 @@
-Import streamlit as st
+import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 from gtts import gTTS
@@ -93,7 +93,8 @@ with tab1:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang = 'ar'
                     
-                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    # تم تصحيح اسم النموذج هنا فقط لتعمل المنصة
+                    model = genai.GenerativeModel('gemini-1.5-pro')
                     response = model.generate_content([prompt, image])
                     
                     # حفظ النتائج في ذاكرة الجلسة
@@ -114,7 +115,8 @@ with tab1:
                     st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
                     
                 except Exception as e:
-                    st.error("حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.")
+                    # تعديل بسيط هنا لتظهر تفاصيل الخطأ بدلاً من رسالة عامة
+                    st.error(f"حدث خطأ أثناء المعالجة: {str(e)}")
 
     # عرض النتائج من الذاكرة (لكي لا تختفي عند ضغط التحميل)
     if st.session_state.analysis_done:
