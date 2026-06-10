@@ -10,17 +10,8 @@ import base64
 # 1. إعدادات الصفحة الأساسية الفاخرة
 st.set_page_config(page_title="منصة بصمة للدمج التعليمية", page_icon="🌟", layout="wide")
 
-# إخفاء قوائم ستريملت + دعم الكتابة من اليمين لليسار (RTL) في مربعات النص
-hide_and_rtl_style = """
-<style>
-#MainMenu {visibility: hidden;} 
-footer {visibility: hidden;} 
-header {visibility: hidden;}
-.stTextArea textarea { direction: rtl; text-align: right; font-size: 16px; }
-.stTextInput input { direction: rtl; text-align: right; font-size: 16px; }
-</style>
-"""
-st.markdown(hide_and_rtl_style, unsafe_allow_html=True)
+hide_style = """<style>#MainMenu {visibility: hidden;} footer {visibility: hidden;} header {visibility: hidden;}</style>"""
+st.markdown(hide_style, unsafe_allow_html=True)
 
 # 2. تفعيل مفتاح جوجل السري
 if "GOOGLE_API_KEY" in st.secrets:
@@ -113,8 +104,7 @@ with tab1:
     with col2:
         subject = st.selectbox("📖 المادة الدراسية:", ["لغة عربية", "رياضيات", "علوم / اكتشف", "دراسات اجتماعية", "لغة إنجليزية", "تربية دينية"], key="subj_img")
     with col3:
-        # تمت إضافة متلازمة داون هنا
-        disability = st.selectbox("🧩 نوع الإعاقة:", ["إعاقة ذهنية بسيطة", "بطء تعلم", "طيف التوحد (دمج خفيف)", "متلازمة داون", "إعاقة بصرية (ضعف بصر)", "إعاقة بصرية (كف بصر)", "إعاقة سمعية (ضعف سمع)", "صعوبات تعلم أكاديمية", "إعاقة حركية (شلل دماغي بسيط)"], key="dis_img")
+        disability = st.selectbox("🧩 نوع الإعاقة:", ["إعاقة ذهنية بسيطة", "بطء تعلم", "طيف التوحد (دمج خفيف)", "إعاقة بصرية (ضعف بصر)", "إعاقة بصرية (كف بصر)", "إعاقة سمعية (ضعف سمع)", "صعوبات تعلم أكاديمية", "إعاقة حركية (شلل دماغي بسيط)"], key="dis_img")
 
     st.markdown("---")
     additional_notes = st.text_area("✍️ ملاحظات المعلم الإضافية (اختياري):", placeholder="اكتب هنا أي تفاصيل خاصة بمستوى الطالب...", key="notes_img")
@@ -201,8 +191,7 @@ with tab6:
     with col2_t:
         subject_t = st.selectbox("📖 المادة الدراسية:", ["لغة عربية", "رياضيات", "علوم / اكتشف", "دراسات اجتماعية", "لغة إنجليزية", "تربية دينية"], key="subj_text")
     with col3_t:
-        # تمت إضافة متلازمة داون هنا أيضاً
-        disability_t = st.selectbox("🧩 نوع الإعاقة:", ["إعاقة ذهنية بسيطة", "بطء تعلم", "طيف التوحد (دمج خفيف)", "متلازمة داون", "إعاقة بصرية (ضعف بصر)", "إعاقة بصرية (كف بصر)", "إعاقة سمعية (ضعف سمع)", "صعوبات تعلم أكاديمية", "إعاقة حركية (شلل دماغي بسيط)"], key="dis_text")
+        disability_t = st.selectbox("🧩 نوع الإعاقة:", ["إعاقة ذهنية بسيطة", "بطء تعلم", "طيف التوحد (دمج خفيف)", "إعاقة بصرية (ضعف بصر)", "إعاقة بصرية (كف بصر)", "إعاقة سمعية (ضعف سمع)", "صعوبات تعلم أكاديمية", "إعاقة حركية (شلل دماغي بسيط)"], key="dis_text")
 
     st.markdown("---")
     lesson_text = st.text_area("📖 الصق أو اكتب نص الدرس هنا:", height=150, placeholder="قم بنسخ نص محتوى الدرس والصقه هنا...")
