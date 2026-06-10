@@ -37,7 +37,7 @@ st.markdown("""
 # دالة خبيرة لتحويل النصوص إلى صيغة Word و Web/PDF
 def create_formatted_doc(text, direction, align):
     html_text = text.replace('\n', '<br>')
-    html_text = re.sub(r'\\(.?)\\*', r'<b>\1</b>', html_text)
+    html_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', html_text)
     doc_content = f"""
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
     <head><meta charset='utf-8'></head>
@@ -97,7 +97,8 @@ with tab1:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang = 'ar'
                     
-                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    # تم تصحيح اسم النموذج هنا ليضمن عمل المنصة بنجاح
+                    model = genai.GenerativeModel('gemini-1.5-pro')
                     response = model.generate_content([prompt, image])
                     
                     st.session_state.result_text = response.text
@@ -117,7 +118,7 @@ with tab1:
                     st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
                     
                 except Exception as e:
-                    st.error("حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.")
+                    st.error(f"حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى. التفاصيل: {str(e)}")
 
     if st.session_state.analysis_done:
         text_dir = "rtl" if st.session_state.audio_lang == 'ar' else "ltr"
@@ -248,7 +249,7 @@ with tab5:
             """)
         with st.expander("🧩 اضطراب طيف التوحد (الدمج الخفيف)"):
             st.markdown("""
-            ### 🔸 ماهية اضطراب طيف التوحد
+            ### 🔸 ماهية اضطراب طيف طيف التوحد
             اضطراب نمائي عصبي يؤثر على التواصل الاجتماعي والتفاعل.
             ### 🌟 شخصيات عالمية ملهمة
             * *تمبل جراندين:* عالمة سلوك حيواني شهيرة.
