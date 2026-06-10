@@ -133,8 +133,8 @@ with tab1:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang = 'ar'
                     
-                    # الاعتماد على نموذج Flash الأسرع والمتوافق مع جميع الحسابات
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    # الاعتماد على النموذج الحديث الفعال والمدعوم حالياً
+                    model = genai.GenerativeModel('gemini-2.5-flash')
                     response = model.generate_content([prompt, image])
                     
                     st.session_state.result_text = response.text
@@ -218,8 +218,8 @@ with tab6:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang_t = 'ar'
                     
-                    # الاعتماد على نموذج Flash الأسرع والمتوافق مع جميع الحسابات
-                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    # الاعتماد على النموذج الحديث الفعال والمدعوم حالياً
+                    model = genai.GenerativeModel('gemini-2.5-flash')
                     response = model.generate_content(prompt)
                     
                     st.session_state.text_result_text = response.text
