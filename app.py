@@ -1,8 +1,3 @@
-
-
-
-
-
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
@@ -138,8 +133,8 @@ with tab1:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang = 'ar'
                     
-                    # الاعتماد على النموذج المتطور بناءً على توجيهاتك
-                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    # الاعتماد على النموذج المتطور الصحيح
+                    model = genai.GenerativeModel('gemini-1.5-pro')
                     response = model.generate_content([prompt, image])
                     
                     st.session_state.result_text = response.text
@@ -159,7 +154,8 @@ with tab1:
                     st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
                     
                 except Exception as e:
-                    st.error("حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.")
+                    # طباعة الخطأ الدقيق لاكتشاف أي مشكلة في الحساب
+                    st.error(f"حدث خطأ أثناء المعالجة: {str(e)}")
 
     if st.session_state.analysis_done:
         text_dir = "rtl" if st.session_state.audio_lang == 'ar' else "ltr"
@@ -223,8 +219,8 @@ with tab6:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang_t = 'ar'
                     
-                    # الاعتماد على النموذج المتطور بناءً على توجيهاتك
-                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    # الاعتماد على النموذج المتطور الصحيح
+                    model = genai.GenerativeModel('gemini-1.5-pro')
                     response = model.generate_content(prompt)
                     
                     st.session_state.text_result_text = response.text
@@ -244,7 +240,8 @@ with tab6:
                     st.success("🎉 تم إعداد الدليل التربوي للنص بنجاح!")
                     
                 except Exception as e:
-                    st.error("حدث خطأ أثناء المعالجة، يرجى المحاولة مرة أخرى.")
+                    # طباعة الخطأ الدقيق لاكتشاف أي مشكلة في الحساب
+                    st.error(f"حدث خطأ أثناء المعالجة: {str(e)}")
 
     if st.session_state.text_analysis_done:
         text_dir_t = "rtl" if st.session_state.text_audio_lang == 'ar' else "ltr"
