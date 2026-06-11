@@ -42,7 +42,7 @@ if 'text_analysis_done' not in st.session_state:
     st.session_state.text_formatted_doc = None
     st.session_state.text_audio_lang = 'ar'
 
-# 3. الهيدر الرئيسي وعرض الصورتين (تم حل مشكلة التحذير في الشاشة السوداء هنا)
+# 3. الهيدر الرئيسي وعرض الصورتين
 col_img1, col_img2 = st.columns(2)
 with col_img1:
     if os.path.exists("logo.jpg"):
@@ -142,7 +142,7 @@ with tab1:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang = 'ar'
                     
-                    # استخدام نموذج 3.5 المتوفر في حسابك الاحترافي
+                    # الاعتماد على النموذج الصحيح الخاص بك
                     model = genai.GenerativeModel('gemini-3.5-flash')
                     response = model.generate_content([prompt, image])
                     
@@ -163,8 +163,11 @@ with tab1:
                     st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
                     
                 except Exception as e:
-                    # هذه الرسالة ستخبرنا بالخطأ التقني الفعلي إذا حدث
-                    st.error(f"حدث خطأ أثناء المعالجة: {str(e)}")
+                    error_msg = str(e).lower()
+                    if "429" in error_msg or "quota" in error_msg:
+                        st.error("⏳ عذراً، يوجد ضغط على المنصة حالياً. يرجى الانتظار 30 ثانية ثم المحاولة مرة أخرى.")
+                    else:
+                        st.error(f"حدث خطأ أثناء المعالجة: {str(e)}")
 
     if st.session_state.analysis_done:
         text_dir = "rtl" if st.session_state.audio_lang == 'ar' else "ltr"
@@ -228,7 +231,7 @@ with tab6:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang_t = 'ar'
                     
-                    # استخدام نموذج 3.5 المتوفر في حسابك الاحترافي
+                    # الاعتماد على النموذج الصحيح الخاص بك
                     model = genai.GenerativeModel('gemini-3.5-flash')
                     response = model.generate_content(prompt)
                     
@@ -249,8 +252,11 @@ with tab6:
                     st.success("🎉 تم إعداد الدليل التربوي للنص بنجاح!")
                     
                 except Exception as e:
-                    # هذه الرسالة ستخبرنا بالخطأ التقني الفعلي إذا حدث
-                    st.error(f"حدث خطأ أثناء المعالجة: {str(e)}")
+                    error_msg = str(e).lower()
+                    if "429" in error_msg or "quota" in error_msg:
+                        st.error("⏳ عذراً، يوجد ضغط على المنصة حالياً. يرجى الانتظار 30 ثانية ثم المحاولة مرة أخرى.")
+                    else:
+                        st.error(f"حدث خطأ أثناء المعالجة: {str(e)}")
 
     if st.session_state.text_analysis_done:
         text_dir_t = "rtl" if st.session_state.text_audio_lang == 'ar' else "ltr"
