@@ -6,6 +6,7 @@ import io
 import re
 import os
 import base64
+import time  # تم إضافة هذه المكتبة لمعالجة الضغط التلقائي
 
 # 1. إعدادات الصفحة الأساسية الفاخرة
 st.set_page_config(page_title="منصة بصمة للدمج التعليمية", page_icon="🌟", layout="wide")
@@ -66,10 +67,11 @@ def get_base64_image(image_path):
     except Exception:
         return ""
 
-# دالة خبيرة لتحويل النصوص إلى صيغة Word و Web/PDF مع دمج اللوجو
+# دالة خبيرة لتحويل النصوص إلى صيغة Word و Web/PDF مع دمج اللوجو (تم التعديل لضمان سلامة الوورد)
 def create_formatted_doc(text, direction, align):
     html_text = text.replace('\n', '<br>')
     html_text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', html_text)
+    html_text = re.sub(r'#(.*?)(<br>|$)', r'<h3 style="color: #1e3a8a;">\1</h3>', html_text) # معالجة عناوين الماركدوان
     
     # دمج اللوجو في أعلى الملف المحمل
     logo_base64 = get_base64_image("waw_logo.png")
@@ -86,7 +88,8 @@ def create_formatted_doc(text, direction, align):
     </body>
     </html>
     """
-    return doc_content.encode('utf-8')
+    # إضافة BOM (b'\xef\xbb\xbf') لحل مشكلة اللغة العربية في ملفات الوورد
+    return b'\xef\xbb\xbf' + doc_content.encode('utf-8')
 
 # 4. تقسيم المنصة (6 تبويبات تفصيلية)
 tab1, tab6, tab2, tab3, tab4, tab5 = st.tabs([
@@ -144,7 +147,19 @@ with tab1:
                     
                     # الاعتماد على النموذج الصحيح الخاص بك
                     model = genai.GenerativeModel('gemini-3.5-flash')
-                    response = model.generate_content([prompt, image])
+                    
+                    # نظام المحاولة التلقائية لتفادي رسالة الضغط
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            response = model.generate_content([prompt, image])
+                            break # الخروج من الحلقة في حال النجاح
+                        except Exception as e:
+                            if "429" in str(e).lower() or "quota" in str(e).lower():
+                                if attempt < max_retries - 1:
+                                    time.sleep(4) # انتظار 4 ثوانٍ في الخلفية ثم إعادة المحاولة
+                                    continue
+                            raise e # رفع الخطأ إذا لم يكن بسبب الضغط أو انتهت المحاولات
                     
                     st.session_state.result_text = response.text
                     st.session_state.audio_lang = audio_lang
@@ -165,7 +180,7 @@ with tab1:
                 except Exception as e:
                     error_msg = str(e).lower()
                     if "429" in error_msg or "quota" in error_msg:
-                        st.error("⏳ عذراً، يوجد ضغط على المنصة حالياً. يرجى الانتظار 30 ثانية ثم المحاولة مرة أخرى.")
+                        st.error("⏳ عذراً، يوجد ضغط عالي جداً على المنصة حالياً. يرجى الانتظار دقيقة ثم المحاولة مرة أخرى.")
                     else:
                         st.error(f"حدث خطأ أثناء المعالجة: {str(e)}")
 
@@ -233,7 +248,19 @@ with tab6:
                     
                     # الاعتماد على النموذج الصحيح الخاص بك
                     model = genai.GenerativeModel('gemini-3.5-flash')
-                    response = model.generate_content(prompt)
+                    
+                    # نظام المحاولة التلقائية لتفادي رسالة الضغط
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            response = model.generate_content(prompt)
+                            break # الخروج من الحلقة في حال النجاح
+                        except Exception as e:
+                            if "429" in str(e).lower() or "quota" in str(e).lower():
+                                if attempt < max_retries - 1:
+                                    time.sleep(4) # انتظار 4 ثوانٍ في الخلفية ثم إعادة المحاولة
+                                    continue
+                            raise e # رفع الخطأ إذا لم يكن بسبب الضغط أو انتهت المحاولات
                     
                     st.session_state.text_result_text = response.text
                     st.session_state.text_audio_lang = audio_lang_t
@@ -254,7 +281,7 @@ with tab6:
                 except Exception as e:
                     error_msg = str(e).lower()
                     if "429" in error_msg or "quota" in error_msg:
-                        st.error("⏳ عذراً، يوجد ضغط على المنصة حالياً. يرجى الانتظار 30 ثانية ثم المحاولة مرة أخرى.")
+                        st.error("⏳ عذراً، يوجد ضغط عالي جداً على المنصة حالياً. يرجى الانتظار دقيقة ثم المحاولة مرة أخرى.")
                     else:
                         st.error(f"حدث خطأ أثناء المعالجة: {str(e)}")
 
