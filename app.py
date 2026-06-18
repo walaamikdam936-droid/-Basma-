@@ -30,7 +30,7 @@ try:
     chosen_key = random.choice(keys)
     genai.configure(api_key=chosen_key)
 except Exception as e:
-    st.error(f"⚠️ يرجى التأكد من إضافة المفاتيح الثلاثة في إعدادات Secrets. التفاصيل: {e}")
+    pass # تم إخفاء خطأ المفاتيح لتجنب إزعاج المستخدم
 
 # تجهيز ذاكرة المنصة (Session State) لحفظ النتائج ومنع اختفائها
 if 'analysis_done' not in st.session_state:
@@ -179,7 +179,11 @@ with tab1:
                     st.success("🎉 تم إعداد الدليل التربوي بنجاح!")
                     
                 except Exception as e:
-                    st.error(f"عطل مؤقت، والسبب البرمجي الخفي هو: {str(e)}")
+                    error_msg = str(e).lower()
+                    if "429" in error_msg or "quota" in error_msg:
+                        st.warning("⚠️ عذراً، يوجد ضغط عالي من السادة المستخدمين على الخوادم الآن، يرجى الانتظار لمدة 60 ثانية والمحاولة مجدداً.")
+                    else:
+                        st.error(f"حدث خطأ غير متوقع: {str(e)}")
 
     if st.session_state.analysis_done:
         text_dir = "rtl" if st.session_state.audio_lang == 'ar' else "ltr"
@@ -274,7 +278,11 @@ with tab6:
                     st.success("🎉 تم إعداد الدليل التربوي للنص بنجاح!")
                     
                 except Exception as e:
-                    st.error(f"عطل مؤقت، والسبب البرمجي الخفي هو: {str(e)}")
+                    error_msg = str(e).lower()
+                    if "429" in error_msg or "quota" in error_msg:
+                        st.warning("⚠️ عذراً، يوجد ضغط عالي من السادة المستخدمين على الخوادم الآن، يرجى الانتظار لمدة 60 ثانية والمحاولة مجدداً.")
+                    else:
+                        st.error(f"حدث خطأ غير متوقع: {str(e)}")
 
     if st.session_state.text_analysis_done:
         text_dir_t = "rtl" if st.session_state.text_audio_lang == 'ar' else "ltr"
