@@ -148,7 +148,7 @@ with tab1:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang = 'ar'
                     
-                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    model = genai.GenerativeModel('gemini-3.8-flash')
                     
                     max_retries = 3
                     for attempt in range(max_retries):
@@ -247,7 +247,7 @@ with tab6:
                         prompt += "\nالنقاط الإلزامية: 1. طريقة التدريس المثلى 2. ثلاثة أنشطة تطبيقية ومبتكرة 3. طريقة التقييم المناسبة 4. نصيحة دعم المعلم (توجيه نفسي وتربوي)."
                         audio_lang_t = 'ar'
                     
-                    model = genai.GenerativeModel('gemini-3.5-flash')
+                    model = genai.GenerativeModel('gemini-3.8-flash')
                     
                     max_retries = 3
                     for attempt in range(max_retries):
